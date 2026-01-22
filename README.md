@@ -1,23 +1,38 @@
+<div align="center">
+
 # Trakit
 
-A free and open-source habit tracker built with SvelteKit, TypeScript, and PostgreSQL. Track your daily habits with a beautiful GitHub-style calendar grid and Material 3 design.
+**A free and open-source habit tracker with a beautiful GitHub-style calendar**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-2.14-orange)](https://kit.svelte.dev/)
+
+[Features](#features) • [Quick Start](#quick-start) • [Deployment](#deployment) • [Documentation](#documentation)
+
+</div>
+
+---
+
+## Overview
+
+Trakit is a self-hosted habit tracking application built with SvelteKit, TypeScript, and PostgreSQL. Track your daily habits with visual calendar grids, secure authentication, and a beautiful Material 3 design—all while keeping your data private on your own server.
 
 ## Features
 
 - 🎨 **Material 3 Design** - Beautiful, modern UI with dark/light mode
-- 📊 **GitHub-style Calendar** - Visual habit tracking with green squares
+- 📊 **GitHub-style Calendar** - Visual habit tracking with color-coded squares
 - 🔐 **Secure Authentication** - Lucia auth with optional email verification
-- 📧 **Email Verification** - Optional SMTP-based email verification with 6-digit codes
-- 🐳 **Docker Ready** - Complete Docker Compose setup with PostgreSQL and Caddy
+- 🐳 **Docker Ready** - One-command deployment with auto-HTTPS
 - 🔒 **Privacy First** - Self-hosted, no external SaaS dependencies
-- ⚡ **Fast & Responsive** - Built with SvelteKit and optimized for performance
-- 🧪 **Tested** - ESLint, Prettier, and Vitest for code quality
+- ⚡ **Fast & Responsive** - Optimized for performance on all devices
+- 🧪 **Production Ready** - Tested with ESLint, Prettier, and Vitest
 
 ## Tech Stack
 
-- **Frontend**: SvelteKit (Svelte 5), TypeScript, Tailwind CSS
+- **Frontend**: SvelteKit 2.14 (Svelte 5), TypeScript, Tailwind CSS
 - **Backend**: SvelteKit API routes, Lucia auth
-- **Database**: PostgreSQL 16 with node-pg-migrate
+- **Database**: PostgreSQL 16 with migrations
 - **Icons**: Iconify (Material Symbols)
 - **Email**: Nodemailer (SMTP)
 - **Deployment**: Docker, Docker Compose, Caddy (auto-HTTPS)
@@ -32,244 +47,173 @@ A free and open-source habit tracker built with SvelteKit, TypeScript, and Postg
 
 ### Local Development
 
-1. **Clone the repository**
+1. **Clone and install**
 
-\`\`\`bash
-git clone https://github.com/yourusername/trakit.git
+```bash
+git clone https://github.com/tylxr59/Trakit.git
 cd trakit
-\`\`\`
-
-2. **Install dependencies**
-
-\`\`\`bash
 npm install
-\`\`\`
+```
 
-3. **Set up environment variables**
+2. **Configure environment**
 
-\`\`\`bash
+```bash
 cp .env.example .env
-\`\`\`
+```
 
-Edit `.env` with your configuration:
-
-\`\`\`env
-# Database
+Edit `.env` with your settings:
+```env
 DATABASE_URL=postgresql://trakit:trakit@localhost:5432/trakit
-
-# Auth
 EMAIL_VERIFICATION_REQUIRED=false
 ALLOW_REGISTRATION=true
-
-# SMTP (only needed if EMAIL_VERIFICATION_REQUIRED=true)
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=noreply@example.com
-SMTP_PASSWORD=your-smtp-password
-SMTP_FROM=Trakit <noreply@example.com>
-
-# App
 PUBLIC_APP_URL=http://localhost:5173
-\`\`\`
+```
 
-4. **Run database migrations**
+3. **Run migrations and start**
 
-\`\`\`bash
+```bash
 npm run migrate:up
-\`\`\`
-
-5. **Start development server**
-
-\`\`\`bash
 npm run dev
-\`\`\`
+```
 
-Visit [http://localhost:5173](http://localhost:5173)
+Visit **http://localhost:5173**
 
-## Environment Variables
+## Deployment
+
+### Production Setup (Debian/Ubuntu)
+
+Deploy to your server with a single command:
+
+```bash
+curl -fsSL https://github.com/tylxr59/Trakit/raw/refs/heads/main/setup.sh -o setup.sh && sudo bash setup.sh
+```
+
+**What it does:**
+- Installs Docker and dependencies
+- Clones the repository
+- Prompts for domain and SMTP settings
+- Configures environment variables
+- Starts the app with auto-HTTPS via Caddy
+
+### Updating
+
+Update to the latest version:
+
+```bash
+curl -fsSL https://github.com/tylxr59/Trakit/raw/refs/heads/main/update.sh -o update.sh && sudo bash update.sh
+```
+
+### Post-Installation
+
+**Disable public registration** after creating your account:
+
+1. Edit `/opt/trakit/.env` and set `ALLOW_REGISTRATION=false`
+2. Restart: `cd /opt/trakit && docker compose restart app`
+
+## Documentation
+
+### Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | Yes | - | PostgreSQL connection string |
-| `EMAIL_VERIFICATION_REQUIRED` | No | `false` | Enable email verification for new users |
+| `EMAIL_VERIFICATION_REQUIRED` | No | `false` | Enable email verification |
 | `ALLOW_REGISTRATION` | No | `true` | Allow new user registration |
-| `SMTP_HOST` | If email verification enabled | - | SMTP server hostname |
-| `SMTP_PORT` | If email verification enabled | `587` | SMTP server port |
-| `SMTP_USER` | If email verification enabled | - | SMTP username |
-| `SMTP_PASSWORD` | If email verification enabled | - | SMTP password |
-| `SMTP_FROM` | If email verification enabled | - | Email sender address |
+| `SMTP_HOST` | Conditional* | - | SMTP server hostname |
+| `SMTP_PORT` | Conditional* | `587` | SMTP server port |
+| `SMTP_USER` | Conditional* | - | SMTP username |
+| `SMTP_PASSWORD` | Conditional* | - | SMTP password |
+| `SMTP_FROM` | Conditional* | - | Email sender address |
 | `PUBLIC_APP_URL` | No | `http://localhost:5173` | Public URL of the app |
 
-## Docker Deployment
+\* Required only if `EMAIL_VERIFICATION_REQUIRED=true`
 
-### Using Docker Compose (Recommended)
+### Database Migrations
 
-1. **Create environment file**
-
-\`\`\`bash
-cp .env.example .env
-\`\`\`
-
-Edit `.env` with your production settings:
-
-\`\`\`env
-DB_PASSWORD=your-secure-password
-DOMAIN=trakit.yourdomain.com
-EMAIL_VERIFICATION_REQUIRED=true
-ALLOW_REGISTRATION=true
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-SMTP_FROM=Trakit <your-email@gmail.com>
-PUBLIC_APP_URL=https://trakit.yourdomain.com
-\`\`\`
-
-2. **Start services**
-
-\`\`\`bash
-docker-compose up -d
-\`\`\`
-
-The app will be available at your domain with automatic HTTPS via Caddy.
-
-### Disable Public Registration
-
-To disable public registration after creating your account:
-
-1. Set `ALLOW_REGISTRATION=false` in your `.env` file
-2. Restart the app: `docker-compose restart app`
-
-Existing users can still log in, but new registrations will be blocked.
-
-## Deploy to Hetzner
-
-Use the included deployment script to quickly deploy to a Hetzner VPS:
-
-\`\`\`bash
-bash deploy-hetzner.sh
-\`\`\`
-
-The script will:
-1. Prompt for server details (IP, SSH key, domain)
-2. Set up Docker and Docker Compose
-3. Clone the repository
-4. Configure environment variables
-5. Start the application with auto-HTTPS
-
-## Database Migrations
-
-### Create a new migration
-
-\`\`\`bash
+```bash
+# Create migration
 npm run migrate:create migration-name
-\`\`\`
 
-### Run migrations
-
-\`\`\`bash
+# Run migrations
 npm run migrate:up
-\`\`\`
 
-### Rollback migrations
-
-\`\`\`bash
+# Rollback
 npm run migrate:down
-\`\`\`
+```
 
-## Development
+### Development Commands
 
-### Code Quality
-
-\`\`\`bash
-# Lint code
-npm run lint
-
-# Format code
-npm run format
-
-# Type check
-npm run check
-
-# Run tests
-npm test
-\`\`\`
+```bash
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run lint         # Lint code
+npm run format       # Format code
+npm run check        # Type check
+npm test             # Run tests
+```
 
 ### Project Structure
 
-\`\`\`
+```
 trakit/
 ├── src/
 │   ├── lib/
-│   │   ├── components/
-│   │   │   ├── CalendarGrid.svelte    # GitHub-style calendar
-│   │   │   └── HabitCard.svelte       # Habit display card
-│   │   ├── server/
-│   │   │   ├── db.ts                  # Database connection
-│   │   │   ├── lucia.ts               # Auth configuration
-│   │   │   └── email.ts               # Email sending
-│   │   └── stores/
-│   │       └── theme.svelte.ts        # Dark/light mode
-│   ├── routes/
-│   │   ├── api/
-│   │   │   └── stamp/                 # Stamp toggle API
-│   │   ├── login/                     # Login page
-│   │   ├── signup/                    # Signup page
-│   │   ├── logout/                    # Logout endpoint
-│   │   └── +page.svelte               # Dashboard
-│   ├── app.css                        # Global styles
-│   └── app.html                       # HTML template
-├── migrations/                        # Database migrations
-├── docker-compose.yml                 # Docker orchestration
-├── Dockerfile                         # App container
-└── Caddyfile                          # Reverse proxy config
-\`\`\`
+│   │   ├── components/     # Svelte components
+│   │   ├── server/         # Server-side utilities
+│   │   └── stores/         # State management
+│   └── routes/             # SvelteKit routes
+├── migrations/             # Database migrations
+├── docker-compose.yml      # Docker orchestration
+└── Dockerfile             # Container definition
+```
 
 ## Email Verification
 
-When `EMAIL_VERIFICATION_REQUIRED=true`:
+When enabled, users receive a 6-digit verification code via email during signup. The code expires after 15 minutes.
 
-1. Users sign up with email and password
-2. A 6-digit code is sent to their email
-3. Users enter the code on the login page
-4. Email is verified and they can access the app
-
-The verification code expires after 15 minutes.
-
-## Material 3 Design
-
-The app uses Material 3 design tokens for consistent theming:
-
-- Dynamic color system with light/dark modes
-- Material Icons via Iconify
-- Responsive layouts
-- Smooth transitions and animations
-
-Theme colors are defined in `src/app.css` and can be customized.
+**Configuration:**
+1. Set `EMAIL_VERIFICATION_REQUIRED=true`
+2. Configure SMTP settings
+3. Test with your email provider (Gmail, SendGrid, etc.)
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! To contribute:
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests and linting
-5. Submit a pull request
+4. Run tests and linting (`npm run lint && npm test`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- 🐛 [Report a bug](https://github.com/yourusername/trakit/issues)
-- 💡 [Request a feature](https://github.com/yourusername/trakit/issues)
-- 📖 [Documentation](https://github.com/yourusername/trakit/wiki)
+- 🐛 [Report a bug](https://github.com/tylxr59/Trakit/issues)
+- 💡 [Request a feature](https://github.com/tylxr59/Trakit/issues)
+- 📖 [Documentation](https://github.com/tylxr59/Trakit)
 
 ## Acknowledgments
 
-- Built with [SvelteKit](https://kit.svelte.dev/)
-- Authentication by [Lucia](https://lucia-auth.com/)
-- Icons from [Iconify](https://iconify.design/)
-- Styled with [Tailwind CSS](https://tailwindcss.com/)
+Built with amazing open-source tools:
+
+- [SvelteKit](https://kit.svelte.dev/) - Web framework
+- [Lucia](https://lucia-auth.com/) - Authentication
+- [PostgreSQL](https://www.postgresql.org/) - Database
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [Iconify](https://iconify.design/) - Icons
+
+---
+
+<div align="center">
+
+Made with ❤️ by tylxr
+
+⭐ Star this repo if you find it useful!
+
+</div>
