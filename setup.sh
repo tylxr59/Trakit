@@ -14,7 +14,7 @@ echo ""
 
 # Prompt for configuration
 read -p "Enter your domain (e.g., trakit.example.com): " DOMAIN
-read -p "Enter database password: " DB_PASSWORD
+DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
 read -p "Require email verification? (y/n, default: y): " EMAIL_VERIFY
 EMAIL_VERIFY=${EMAIL_VERIFY:-y}
 if [[ $EMAIL_VERIFY =~ ^[Yy]$ ]]; then
