@@ -6,10 +6,7 @@ import { sendVerificationEmail } from '$lib/server/email';
 import { signupRateLimiter, getClientIP } from '$lib/server/rateLimit';
 import { isValidEmail } from '$lib/server/validation';
 import { logSecurityEvent, createSecurityEvent } from '$lib/server/logger';
-import {
-	EMAIL_VERIFICATION_REQUIRED,
-	ALLOW_REGISTRATION
-} from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -17,8 +14,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/');
 	}
 	return {
-		allowRegistration: ALLOW_REGISTRATION === 'true',
-		emailVerificationRequired: EMAIL_VERIFICATION_REQUIRED === 'true'
+		allowRegistration: env.ALLOW_REGISTRATION === 'true',
+		emailVerificationRequired: env.EMAIL_VERIFICATION_REQUIRED === 'true'
 	};
 };
 
@@ -39,7 +36,7 @@ export const actions: Actions = {
 			});
 		}
 
-		if (ALLOW_REGISTRATION !== 'true') {
+		if (env.ALLOW_REGISTRATION !== 'true') {
 			return fail(403, { message: 'Registration is currently disabled' });
 		}
 
@@ -94,7 +91,7 @@ export const actions: Actions = {
 			parallelism: 1
 		});
 
-		const emailVerified = EMAIL_VERIFICATION_REQUIRED !== 'true';
+		const emailVerified = env.EMAIL_VERIFICATION_REQUIRED !== 'true';
 
 		// Insert user and get the generated UUID
 		const userResult = await pool.query(
@@ -114,7 +111,7 @@ export const actions: Actions = {
 		// Reset rate limit on successful signup
 		signupRateLimiter.reset(clientIP);
 
-		if (EMAIL_VERIFICATION_REQUIRED === 'true') {
+		if (env.EMAIL_VERIFICATION_REQUIRED === 'true') {
 			// Generate 6-digit code
 			const code = Math.floor(100000 + Math.random() * 900000).toString();
 			const expiresAt = new Date();

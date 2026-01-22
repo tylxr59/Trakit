@@ -5,7 +5,7 @@ import { lucia } from '$lib/server/lucia';
 import { loginRateLimiter, verificationRateLimiter, getClientIP } from '$lib/server/rateLimit';
 import { constantTimeCompare } from '$lib/server/validation';
 import { logSecurityEvent, createSecurityEvent } from '$lib/server/logger';
-import { EMAIL_VERIFICATION_REQUIRED } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/');
 	}
 	return {
-		emailVerificationRequired: EMAIL_VERIFICATION_REQUIRED === 'true'
+		emailVerificationRequired: env.EMAIL_VERIFICATION_REQUIRED === 'true'
 	};
 };
 
@@ -85,7 +85,7 @@ export const actions: Actions = {
 		}
 
 		// Check email verification if required
-		if (EMAIL_VERIFICATION_REQUIRED === 'true' && !user.email_verified) {
+		if (env.EMAIL_VERIFICATION_REQUIRED === 'true' && !user.email_verified) {
 			if (!verificationCode) {
 				return fail(400, {
 					message: 'Email verification required. Please enter your verification code.',

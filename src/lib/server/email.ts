@@ -1,25 +1,19 @@
 import nodemailer from 'nodemailer';
-import {
-	SMTP_HOST,
-	SMTP_PORT,
-	SMTP_USER,
-	SMTP_PASSWORD,
-	SMTP_FROM
-} from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 const transporter = nodemailer.createTransport({
-	host: SMTP_HOST,
-	port: parseInt(SMTP_PORT),
-	secure: parseInt(SMTP_PORT) === 465,
+	host: env.SMTP_HOST,
+	port: parseInt(env.SMTP_PORT || '587'),
+	secure: parseInt(env.SMTP_PORT || '587') === 465,
 	auth: {
-		user: SMTP_USER,
-		pass: SMTP_PASSWORD
+		user: env.SMTP_USER,
+		pass: env.SMTP_PASSWORD
 	}
 });
 
 export async function sendVerificationEmail(email: string, code: string) {
 	await transporter.sendMail({
-		from: SMTP_FROM,
+		from: env.SMTP_FROM,
 		to: email,
 		subject: 'Verify your email - Trakit',
 		text: `Your verification code is: ${code}\n\nThis code will expire in 15 minutes.`,
