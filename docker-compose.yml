@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  postgres:
+  db:
     image: postgres:16-alpine
     container_name: trakit-db
     environment:
@@ -24,7 +22,7 @@ services:
       dockerfile: Dockerfile
     container_name: trakit-app
     environment:
-      DATABASE_URL: postgresql://trakit:${DB_PASSWORD:-trakit}@postgres:5432/trakit
+      DATABASE_URL: postgresql://trakit:${DB_PASSWORD:-trakit}@db:5432/trakit
       EMAIL_VERIFICATION_REQUIRED: ${EMAIL_VERIFICATION_REQUIRED:-false}
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
       SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
@@ -35,7 +33,7 @@ services:
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:3000}
       NODE_ENV: production
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
     networks:
       - trakit-network
