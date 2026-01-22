@@ -95,15 +95,42 @@ curl -fsSL https://github.com/tylxr59/Trakit/raw/refs/heads/main/setup.sh -o set
 - Configures environment variables
 - Starts the app with auto-HTTPS via Caddy
 
-### Updating
+### Management Scripts
 
-Update to the latest version:
+Once installed, you have access to management scripts in `/opt/trakit/`:
+
+**Update to latest version:**
 
 ```bash
-curl -fsSL https://github.com/tylxr59/Trakit/raw/refs/heads/main/update.sh -o update.sh && sudo bash update.sh
+cd /opt/trakit && sudo ./update.sh
 ```
 
+**Admin dashboard** for user management and statistics:
+
+```bash
+cd /opt/trakit && sudo ./admin.sh
+```
+
+Available admin functions:
+- View user statistics
+- List all users
+- View habit statistics
+- Delete users
+- View application logs
+
 ### Post-Installation
+
+**Update to latest version:**
+
+```bash
+cd /opt/trakit && sudo ./update.sh
+```
+
+**Admin dashboard** for user management and statistics:
+
+```bash
+cd /opt/trakit && sudo ./admin.sh
+```
 
 **Disable public registration** after creating your account:
 
