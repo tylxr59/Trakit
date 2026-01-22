@@ -10,15 +10,22 @@
 	let showDeleteConfirm = $state(false);
 	let showEditForm = $state(false);
 	let showColorPicker = $state(false);
-	let editName = $state(data.habit.name);
-	let editColor = $state(data.habit.color);
-	let editFrequency = $state(data.habit.frequency || 'daily');
-	let habitName = $state(data.habit.name);
-	let habitColor = $state(data.habit.color);
-	let habitFrequency = $state(data.habit.frequency || 'daily');
-	let stamps = $state(data.stamps);
-	let currentStreak = $state(data.currentStreak);
+	let editName = $state('');
+	let editColor = $state('');
+	let editFrequency = $state('daily');
+	let habitName = $derived(data.habit.name);
+	let habitColor = $derived(data.habit.color);
+	let habitFrequency = $derived(data.habit.frequency || 'daily');
+	let stamps = $derived(data.stamps);
+	let currentStreak = $derived(data.currentStreak);
 	let isSharing = $state(false);
+	
+	// Sync editable form fields with data
+	$effect(() => {
+		editName = data.habit.name;
+		editColor = data.habit.color;
+		editFrequency = data.habit.frequency || 'daily';
+	});
 	let shareableSection: HTMLElement;
 
 	// Derived values for period-aware labels
@@ -200,9 +207,10 @@
 					/>
 				</div>
 				<div class="form-group">
-					<label>Color</label>
+					<label for="edit-color">Color</label>
 					<button
 						type="button"
+						id="edit-color"
 						class="color-button"
 						style="background-color: {editColor}"
 						onclick={() => (showColorPicker = true)}
@@ -301,8 +309,8 @@
 
 <!-- Delete Confirmation Modal -->
 {#if showDeleteConfirm}
-	<div class="modal-overlay" onclick={() => (showDeleteConfirm = false)}>
-		<div class="modal" onclick={(e) => e.stopPropagation()}>
+	<div class="modal-overlay" role="button" tabindex="0" onclick={() => (showDeleteConfirm = false)} onkeydown={(e) => e.key === 'Escape' && (showDeleteConfirm = false)}>
+		<div class="modal-content" role="dialog" tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
 			<h3 class="modal-title">Delete Habit?</h3>
 			<p class="modal-text">
 				Are you sure you want to delete "{data.habit.name}"? This will permanently delete all
@@ -659,15 +667,6 @@
 		justify-content: center;
 		z-index: 1000;
 		padding: 20px;
-	}
-
-	.modal {
-		background: rgb(var(--color-surface));
-		border-radius: 16px;
-		padding: 32px;
-		max-width: 440px;
-		width: 100%;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 	}
 
 	.modal-title {

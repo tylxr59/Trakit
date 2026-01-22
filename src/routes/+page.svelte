@@ -3,14 +3,13 @@
 	import CalendarGrid from '$lib/components/CalendarGrid.svelte';
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
 	import Icon from '@iconify/svelte';
-	import { enhance } from '$app/forms';
 	import { themeStore } from '$lib/stores/theme.svelte';
 
 	let { data } = $props();
 
-	// Create local reactive state from server data
-	let habits = $state(data.habits);
-	let aggregatedData = $state(data.aggregatedData);
+	// Create reactive values from server data
+	let habits = $derived(data.habits);
+	let aggregatedData = $derived(data.aggregatedData);
 
 	let showAddForm = $state(false);
 	let showColorPicker = $state(false);
@@ -77,35 +76,6 @@
 
 			// Recalculate aggregated data
 			aggregatedData = recalculateAggregatedData();
-		}
-	}
-
-	async function updateHabit(
-		habitId: string,
-		updates: { name?: string; color?: string; frequency?: string }
-	) {
-		const response = await fetch('/api/habit', {
-			method: 'PATCH',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				habitId,
-				...updates
-			})
-		});
-
-		if (response.ok) {
-			// Update local state
-			habits = habits.map((h) => {
-				if (h.id === habitId) {
-					return {
-						...h,
-						...(updates.name && { name: updates.name }),
-						...(updates.color && { color: updates.color }),
-						...(updates.frequency && { frequency: updates.frequency })
-					};
-				}
-				return h;
-			});
 		}
 	}
 
@@ -291,12 +261,14 @@
 			<div class="habits-section">
 				<h2 class="section-title">Daily Habits</h2>
 				<div class="habits-list">
-					{#each dailyHabits as habit, index (habit.id)}
+					{#each dailyHabits as habit (habit.id)}
 						<div
 							class="habit-wrapper"
 							class:dragging={draggedIndex === habits.indexOf(habit)}
 							class:drop-target={dropTargetIndex === habits.indexOf(habit) && draggedIndex !== habits.indexOf(habit)}
 							draggable="true"
+							role="button"
+							tabindex="0"
 							ondragstart={(e) => handleDragStart(e, habits.indexOf(habit))}
 							ondragend={handleDragEnd}
 							ondragover={(e) => handleDragOver(e, habits.indexOf(habit))}
@@ -318,12 +290,14 @@
 			<div class="habits-section">
 				<h2 class="section-title">Weekly Habits</h2>
 				<div class="habits-list">
-					{#each weeklyHabits as habit, index (habit.id)}
+					{#each weeklyHabits as habit (habit.id)}
 						<div
 							class="habit-wrapper"
 							class:dragging={draggedIndex === habits.indexOf(habit)}
 							class:drop-target={dropTargetIndex === habits.indexOf(habit) && draggedIndex !== habits.indexOf(habit)}
 							draggable="true"
+							role="button"
+							tabindex="0"
 							ondragstart={(e) => handleDragStart(e, habits.indexOf(habit))}
 							ondragend={handleDragEnd}
 							ondragover={(e) => handleDragOver(e, habits.indexOf(habit))}
@@ -345,12 +319,14 @@
 			<div class="habits-section">
 				<h2 class="section-title">Monthly Habits</h2>
 				<div class="habits-list">
-					{#each monthlyHabits as habit, index (habit.id)}
+					{#each monthlyHabits as habit (habit.id)}
 						<div
 							class="habit-wrapper"
 							class:dragging={draggedIndex === habits.indexOf(habit)}
 							class:drop-target={dropTargetIndex === habits.indexOf(habit) && draggedIndex !== habits.indexOf(habit)}
 							draggable="true"
+							role="button"
+							tabindex="0"
 							ondragstart={(e) => handleDragStart(e, habits.indexOf(habit))}
 							ondragend={handleDragEnd}
 							ondragover={(e) => handleDragOver(e, habits.indexOf(habit))}
@@ -592,22 +568,6 @@
 		border-top: 3px solid rgb(var(--color-primary));
 		padding-top: 3px;
 		margin-top: -3px;
-	}
-
-	.drop-zone {
-		min-height: 48px;
-		position: relative;
-	}
-
-	.drop-zone.active::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 3px;
-		background: rgb(var(--color-primary));
-		border-radius: 2px;
 	}
 
 	@media (max-width: 768px) {

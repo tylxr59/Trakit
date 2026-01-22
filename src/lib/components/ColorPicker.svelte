@@ -34,8 +34,8 @@
 	}
 </script>
 
-<div class="overlay" onclick={onClose}>
-	<div class="picker" onclick={(e) => e.stopPropagation()}>
+<div class="overlay" role="button" tabindex="0" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()}>
+	<div class="picker" role="dialog" tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
 		<h3 class="title">Choose a color</h3>
 		<div class="colors-grid">
 			{#each colors as color}

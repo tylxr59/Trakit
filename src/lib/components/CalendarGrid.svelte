@@ -22,8 +22,6 @@
 
 	let containerElement: HTMLElement;
 
-	const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
 	onMount(() => {
 		// Scroll to the right (most recent data)
 		if (containerElement) {
@@ -311,12 +309,6 @@
 			border-radius: 3px;
 		}
 		
-		.day-label {
-			width: 16px;
-			height: 16px;
-			font-size: 10px;
-		}
-		
 		.month-label {
 			font-size: 11px;
 		}
@@ -326,10 +318,6 @@
 		}
 		
 		.week-column {
-			gap: 2px;
-		}
-		
-		.day-labels {
 			gap: 2px;
 		}
 		

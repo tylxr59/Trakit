@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 
 function createThemeStore() {
+	// eslint-disable-next-line no-undef
 	let theme = $state<'light' | 'dark'>('light');
 
 	return {

@@ -71,10 +71,6 @@
 		cursor: move;
 	}
 
-	.habit-row.dragging {
-		opacity: 0.5;
-	}
-
 	.drag-handle {
 		color: rgb(var(--color-on-surface-variant));
 		display: flex;
@@ -137,10 +133,6 @@
 		color: rgb(var(--color-on-surface-variant));
 		font-size: 14px;
 		font-weight: 600;
-	}
-
-	.fire-icon {
-		color: #ff6b35;
 	}
 
 	.stats-link {

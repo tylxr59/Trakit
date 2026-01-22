@@ -69,7 +69,7 @@ export function isValidFrequency(frequency: string): boolean {
 /**
  * Validate habit stamp value
  */
-export function isValidStampValue(value: any): boolean {
+export function isValidStampValue(value: unknown): boolean {
 	if (typeof value !== 'number') {
 		return false;
 	}

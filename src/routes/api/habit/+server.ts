@@ -23,7 +23,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
 	// Build update query dynamically
 	const updates: string[] = [];
-	const values: any[] = [];
+	const values: (string | number)[] = [];
 	let paramCount = 1;
 
 	if (name !== undefined) {
