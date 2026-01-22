@@ -62,6 +62,7 @@ cp .env.example .env
 ```
 
 Edit `.env` with your settings:
+
 ```env
 DATABASE_URL=postgresql://trakit:trakit@localhost:5432/trakit
 EMAIL_VERIFICATION_REQUIRED=false
@@ -89,6 +90,7 @@ curl -fsSL https://github.com/tylxr59/Trakit/raw/refs/heads/main/setup.sh -o set
 ```
 
 **What it does:**
+
 - Installs Docker and dependencies
 - Clones the repository
 - Prompts for domain and SMTP settings
@@ -112,6 +114,7 @@ cd /opt/trakit && sudo ./admin.sh
 ```
 
 Available admin functions:
+
 - View user statistics
 - List all users
 - View habit statistics
@@ -141,17 +144,17 @@ cd /opt/trakit && sudo ./admin.sh
 
 ### Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes | - | PostgreSQL connection string |
-| `EMAIL_VERIFICATION_REQUIRED` | No | `false` | Enable email verification |
-| `ALLOW_REGISTRATION` | No | `true` | Allow new user registration |
-| `SMTP_HOST` | Conditional* | - | SMTP server hostname |
-| `SMTP_PORT` | Conditional* | `587` | SMTP server port |
-| `SMTP_USER` | Conditional* | - | SMTP username |
-| `SMTP_PASSWORD` | Conditional* | - | SMTP password |
-| `SMTP_FROM` | Conditional* | - | Email sender address |
-| `PUBLIC_APP_URL` | No | `http://localhost:5173` | Public URL of the app |
+| Variable                      | Required      | Default                 | Description                  |
+| ----------------------------- | ------------- | ----------------------- | ---------------------------- |
+| `DATABASE_URL`                | Yes           | -                       | PostgreSQL connection string |
+| `EMAIL_VERIFICATION_REQUIRED` | No            | `false`                 | Enable email verification    |
+| `ALLOW_REGISTRATION`          | No            | `true`                  | Allow new user registration  |
+| `SMTP_HOST`                   | Conditional\* | -                       | SMTP server hostname         |
+| `SMTP_PORT`                   | Conditional\* | `587`                   | SMTP server port             |
+| `SMTP_USER`                   | Conditional\* | -                       | SMTP username                |
+| `SMTP_PASSWORD`               | Conditional\* | -                       | SMTP password                |
+| `SMTP_FROM`                   | Conditional\* | -                       | Email sender address         |
+| `PUBLIC_APP_URL`              | No            | `http://localhost:5173` | Public URL of the app        |
 
 \* Required only if `EMAIL_VERIFICATION_REQUIRED=true`
 
@@ -199,6 +202,7 @@ trakit/
 When enabled, users receive a 6-digit verification code via email during signup. The code expires after 15 minutes.
 
 **Configuration:**
+
 1. Set `EMAIL_VERIFICATION_REQUIRED=true`
 2. Configure SMTP settings
 3. Test with your email provider (Gmail, SendGrid, etc.)

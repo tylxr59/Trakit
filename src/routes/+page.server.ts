@@ -4,7 +4,10 @@ import { validateHabitName, isValidColor, isValidFrequency } from '$lib/server/v
 import type { PageServerLoad, Actions } from './$types';
 
 // Calculate current streak for a habit
-function calculateStreak(stamps: Array<{ date: string; value: number }>, frequency: string = 'daily'): number {
+function calculateStreak(
+	stamps: Array<{ date: string; value: number }>,
+	frequency: string = 'daily'
+): number {
 	if (stamps.length === 0) return 0;
 
 	// Sort stamps by date descending
@@ -74,7 +77,9 @@ function calculateStreak(stamps: Array<{ date: string; value: number }>, frequen
 		}
 
 		const currentWeek = getWeekKey(today);
-		const lastWeek = getWeekKey(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+		const lastWeek = getWeekKey(
+			new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+		);
 
 		// Must have completion in current or last week to start streak
 		if (!weekMap.has(currentWeek) && !weekMap.has(lastWeek)) {
@@ -85,7 +90,8 @@ function calculateStreak(stamps: Array<{ date: string; value: number }>, frequen
 		let checkDate = new Date();
 
 		// Count backwards by weeks
-		for (let i = 0; i < 104; i++) { // Check up to 2 years of weeks
+		for (let i = 0; i < 104; i++) {
+			// Check up to 2 years of weeks
 			const weekKey = getWeekKey(checkDate.toISOString().split('T')[0]);
 			if (weekMap.has(weekKey)) {
 				streak++;
@@ -127,7 +133,8 @@ function calculateStreak(stamps: Array<{ date: string; value: number }>, frequen
 		let checkDate = new Date();
 
 		// Count backwards by months
-		for (let i = 0; i < 24; i++) { // Check up to 2 years of months
+		for (let i = 0; i < 24; i++) {
+			// Check up to 2 years of months
 			const monthKey = getMonthKey(checkDate.toISOString().split('T')[0]);
 			if (monthMap.has(monthKey)) {
 				streak++;
@@ -253,12 +260,10 @@ export const actions: Actions = {
 			return { error: 'Invalid frequency' };
 		}
 
-		await pool.query('INSERT INTO habits (user_id, name, color, frequency) VALUES ($1, $2, $3, $4)', [
-			locals.user.id,
-			nameValidation.sanitized,
-			color,
-			frequency
-		]);
+		await pool.query(
+			'INSERT INTO habits (user_id, name, color, frequency) VALUES ($1, $2, $3, $4)',
+			[locals.user.id, nameValidation.sanitized, color, frequency]
+		);
 
 		return { success: true };
 	},

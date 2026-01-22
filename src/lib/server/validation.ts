@@ -11,15 +11,20 @@ export function isValidEmail(email: string): boolean {
 	}
 
 	// Basic email regex - RFC 5322 compliant
-	const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-	
+	const emailRegex =
+		/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
 	return emailRegex.test(email) && email.length <= 254;
 }
 
 /**
  * Validate and sanitize habit name
  */
-export function validateHabitName(name: string): { valid: boolean; sanitized?: string; error?: string } {
+export function validateHabitName(name: string): {
+	valid: boolean;
+	sanitized?: string;
+	error?: string;
+} {
 	if (!name || typeof name !== 'string') {
 		return { valid: false, error: 'Habit name is required' };
 	}
