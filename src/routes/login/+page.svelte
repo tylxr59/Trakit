@@ -3,7 +3,7 @@
 	import Icon from '@iconify/svelte';
 
 	let { data, form } = $props();
-	let showVerificationInput = $derived(form?.requiresVerification || false);
+	let showVerificationInput = $state(false);
 </script>
 
 <svelte:head>

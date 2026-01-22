@@ -1,5 +1,5 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
@@ -60,8 +60,5 @@ export default defineConfig({
 				enabled: false // Disable in dev to avoid confusion
 			}
 		})
-	],
-	test: {
-		include: ['src/**/*.{test,spec}.{js,ts}']
-	}
+	]
 });

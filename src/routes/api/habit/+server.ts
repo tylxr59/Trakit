@@ -32,7 +32,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 			throw error(400, validation.error || 'Invalid habit name');
 		}
 		updates.push(`name = $${paramCount++}`);
-		values.push(validation.sanitized);
+		values.push(validation.sanitized!);
 	}
 
 	if (color !== undefined) {
@@ -48,6 +48,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 			throw error(400, 'Invalid frequency. Must be daily, weekly, or monthly');
 		}
 		updates.push(`frequency = $${paramCount++}`);
+		values.push(frequency as string);
 		values.push(frequency);
 	}
 

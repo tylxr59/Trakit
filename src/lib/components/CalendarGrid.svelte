@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 
 	interface Props {
-		data: Array<{ date: string; value: number }>;
+		data: Array<{ date: string | Date; value: number }>;
 		color?: string;
 		colorMap?: {
 			level0: string;
