@@ -55,7 +55,7 @@ while true; do
             VERIFIED_USERS=$(run_query "SELECT COUNT(*) FROM users WHERE email_verified = true;")
             USERS_WITH_HABITS=$(run_query "SELECT COUNT(DISTINCT user_id) FROM habits;")
             TOTAL_HABITS=$(run_query "SELECT COUNT(*) FROM habits;")
-            TOTAL_STAMPS=$(run_query "SELECT COUNT(*) FROM stamps;")
+            TOTAL_STAMPS=$(run_query "SELECT COUNT(*) FROM habit_stamps;")
             
             echo "Total Users: $TOTAL_USERS"
             echo "Verified Users: $VERIFIED_USERS"
@@ -92,7 +92,7 @@ while true; do
             run_query_formatted "SELECT 
                 u.email,
                 COUNT(h.id) as habit_count,
-                COALESCE(SUM((SELECT COUNT(*) FROM stamps WHERE habit_id = h.id)), 0) as total_stamps
+                COALESCE(SUM((SELECT COUNT(*) FROM habit_stamps WHERE habit_id = h.id)), 0) as total_stamps
             FROM users u
             LEFT JOIN habits h ON u.id = h.user_id
             GROUP BY u.id, u.email
@@ -137,7 +137,7 @@ while true; do
             echo "Deleting user data..."
             
             # Delete in order: stamps -> habits -> sessions -> user
-            run_query "DELETE FROM stamps WHERE habit_id IN (SELECT id FROM habits WHERE user_id = '$USER_ID');"
+            run_query "DELETE FROM habit_stamps WHERE habit_id IN (SELECT id FROM habits WHERE user_id = '$USER_ID');"
             run_query "DELETE FROM habits WHERE user_id = '$USER_ID';"
             run_query "DELETE FROM user_sessions WHERE user_id = '$USER_ID';"
             run_query "DELETE FROM email_verification_codes WHERE user_id = '$USER_ID';"
