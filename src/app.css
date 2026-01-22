@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	/* Material 3 color tokens - light mode */
+	--color-primary: 103 80 164;
+	--color-on-primary: 255 255 255;
+	--color-primary-container: 234 221 255;
+	--color-on-primary-container: 33 0 94;
+	--color-secondary: 98 91 113;
+	--color-on-secondary: 255 255 255;
+	--color-secondary-container: 232 222 248;
+	--color-on-secondary-container: 30 25 43;
+	--color-tertiary: 125 82 96;
+	--color-on-tertiary: 255 255 255;
+	--color-tertiary-container: 255 216 228;
+	--color-on-tertiary-container: 49 16 29;
+	--color-error: 186 26 26;
+	--color-on-error: 255 255 255;
+	--color-error-container: 255 218 214;
+	--color-on-error-container: 65 0 2;
+	--color-background: 254 247 255;
+	--color-on-background: 28 27 31;
+	--color-surface: 254 247 255;
+	--color-on-surface: 28 27 31;
+	--color-surface-variant: 231 224 236;
+	--color-on-surface-variant: 73 69 79;
+	--color-outline: 121 116 126;
+	--color-outline-variant: 202 196 208;
+}
+
+:root.dark {
+	/* Material 3 color tokens - dark mode */
+	--color-primary: 208 188 255;
+	--color-on-primary: 55 0 139;
+	--color-primary-container: 79 55 139;
+	--color-on-primary-container: 234 221 255;
+	--color-secondary: 204 194 220;
+	--color-on-secondary: 51 45 65;
+	--color-secondary-container: 74 68 88;
+	--color-on-secondary-container: 232 222 248;
+	--color-tertiary: 239 184 200;
+	--color-on-tertiary: 73 37 50;
+	--color-tertiary-container: 99 59 72;
+	--color-on-tertiary-container: 255 216 228;
+	--color-error: 255 180 171;
+	--color-on-error: 105 0 5;
+	--color-error-container: 147 0 10;
+	--color-on-error-container: 255 218 214;
+	--color-background: 28 27 31;
+	--color-on-background: 230 225 229;
+	--color-surface: 28 27 31;
+	--color-on-surface: 230 225 229;
+	--color-surface-variant: 73 69 79;
+	--color-on-surface-variant: 202 196 208;
+	--color-outline: 147 143 153;
+	--color-outline-variant: 73 69 79;
+}
+
+@layer base {
+	body {
+		@apply bg-background text-on-background;
+	}
+}

@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-build-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: trakit_test
+          POSTGRES_USER: trakit
+          POSTGRES_PASSWORD: trakit
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Type check
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://trakit:trakit@localhost:5432/trakit_test
+          EMAIL_VERIFICATION_REQUIRED: false
+          ALLOW_REGISTRATION: true
+          SMTP_HOST: smtp.example.com
+          SMTP_PORT: 587
+          SMTP_USER: test@example.com
+          SMTP_PASSWORD: test
+          SMTP_FROM: Test <test@example.com>
+          PUBLIC_APP_URL: http://localhost:5173
+
+      - name: Run tests
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://trakit:trakit@localhost:5432/trakit_test

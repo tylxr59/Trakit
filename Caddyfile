@@ -1,0 +1,17 @@
+{$DOMAIN:localhost} {
+	reverse_proxy app:3000
+	encode gzip
+	
+	# Security headers
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+	
+	# Logging
+	log {
+		output file /var/log/caddy/access.log
+	}
+}

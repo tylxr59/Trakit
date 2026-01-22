@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: trakit-db
+    environment:
+      POSTGRES_DB: trakit
+      POSTGRES_USER: trakit
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-trakit}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - trakit-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U trakit']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trakit-app
+    environment:
+      DATABASE_URL: postgresql://trakit:${DB_PASSWORD:-trakit}@postgres:5432/trakit
+      EMAIL_VERIFICATION_REQUIRED: ${EMAIL_VERIFICATION_REQUIRED:-false}
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+      SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-noreply@example.com}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-Trakit <noreply@example.com>}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:3000}
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - trakit-network
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: trakit-caddy
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    depends_on:
+      - app
+    networks:
+      - trakit-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  trakit-network:
+    driver: bridge

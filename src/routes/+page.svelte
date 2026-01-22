@@ -1,0 +1,547 @@
+<script lang="ts">
+	import HabitRow from '$lib/components/HabitRow.svelte';
+	import CalendarGrid from '$lib/components/CalendarGrid.svelte';
+	import ColorPicker from '$lib/components/ColorPicker.svelte';
+	import Icon from '@iconify/svelte';
+	import { enhance } from '$app/forms';
+	import { themeStore } from '$lib/stores/theme.svelte';
+
+	let { data } = $props();
+
+	// Create local reactive state from server data
+	let habits = $state(data.habits);
+	let aggregatedData = $state(data.aggregatedData);
+
+	let showAddForm = $state(false);
+	let showColorPicker = $state(false);
+	let newHabitName = $state('');
+	let newHabitColor = $state('#22C55E');
+
+	const today = new Date().toISOString().split('T')[0];
+
+	// Drag and drop state
+	let draggedIndex = $state<number | null>(null);
+	let dropTargetIndex = $state<number | null>(null);
+
+	function getTodayStamp(habitId: string) {
+		const habit = habits.find((h) => h.id === habitId);
+		if (!habit) return false;
+		return habit.stamps.some((s) => s.date === today && s.value > 0);
+	}
+
+	async function toggleStamp(habitId: string) {
+		const isStamped = getTodayStamp(habitId);
+		
+		// Send request to server
+		const response = await fetch('/api/stamp', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				habitId,
+				date: today,
+				value: isStamped ? 0 : 1
+			})
+		});
+
+		if (response.ok) {
+			// Optimistic update - create new array to trigger reactivity
+			habits = habits.map((h) => {
+				if (h.id === habitId) {
+					const existingStamp = h.stamps.find((s) => s.date === today);
+					if (existingStamp) {
+						// Update existing stamp
+						return {
+							...h,
+							stamps: h.stamps.map((s) =>
+								s.date === today ? { ...s, value: isStamped ? 0 : 1 } : s
+							),
+							currentStreak: isStamped ? Math.max(0, h.currentStreak - 1) : h.currentStreak + 1
+						};
+					} else {
+						// Add new stamp
+						return {
+							...h,
+							stamps: [...h.stamps, { date: today, value: 1 }],
+							currentStreak: h.currentStreak + 1
+						};
+					}
+				}
+				return h;
+			});
+
+			// Recalculate aggregated data
+			aggregatedData = recalculateAggregatedData();
+		}
+	}
+
+	function recalculateAggregatedData() {
+		const aggregated = new Map<string, { date: string; value: number }>();
+		
+		// Get all unique dates from all habits
+		const allDates = new Set<string>();
+		habits.forEach((habit) => {
+			habit.stamps.forEach((stamp) => {
+				allDates.add(stamp.date);
+			});
+		});
+
+		// Calculate completion percentage for each date
+		allDates.forEach((date) => {
+			let completedCount = 0;
+			habits.forEach((habit) => {
+				const stamp = habit.stamps.find((s) => s.date === date);
+				if (stamp && stamp.value > 0) {
+					completedCount++;
+				}
+			});
+
+			const percentage = habits.length > 0 ? (completedCount / habits.length) * 100 : 0;
+			aggregated.set(date, { date, value: percentage });
+		});
+
+		return Array.from(aggregated.values());
+	}
+
+	// Drag and drop handlers
+	function handleDragStart(event: DragEvent, index: number) {
+		draggedIndex = index;
+		if (event.dataTransfer) {
+			event.dataTransfer.effectAllowed = 'move';
+		}
+	}
+
+	function handleDragEnd() {
+		draggedIndex = null;
+		dropTargetIndex = null;
+	}
+
+	function handleDragOver(event: DragEvent, index: number) {
+		event.preventDefault();
+		if (event.dataTransfer) {
+			event.dataTransfer.dropEffect = 'move';
+		}
+		
+		// Update drop target if different from dragged item
+		if (draggedIndex !== null && draggedIndex !== index) {
+			dropTargetIndex = index;
+		}
+	}
+
+	async function handleDrop(event: DragEvent, dropIndex: number) {
+		event.preventDefault();
+		
+		if (draggedIndex === null || draggedIndex === dropIndex) {
+			dropTargetIndex = null;
+			draggedIndex = null;
+			return;
+		}
+
+		// Reorder habits array
+		const newHabits = [...habits];
+		const [draggedHabit] = newHabits.splice(draggedIndex, 1);
+		newHabits.splice(dropIndex, 0, draggedHabit);
+		
+		habits = newHabits;
+		dropTargetIndex = null;
+		draggedIndex = null;
+
+		// Save new order to server
+		const habitIds = habits.map((h) => h.id);
+		await fetch('/api/reorder', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ habitIds })
+		});
+	}
+
+	// Theme-aware color map for aggregated view
+	const colorMap = $derived({
+		level0: themeStore.value === 'dark' ? 'rgb(30 30 35)' : 'rgb(235 237 240)',
+		level1: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.3)' : 'rgb(103 80 164 / 0.2)',
+		level2: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.5)' : 'rgb(103 80 164 / 0.4)',
+		level3: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.75)' : 'rgb(103 80 164 / 0.65)',
+		level4: themeStore.value === 'dark' ? 'rgb(208 188 255)' : 'rgb(103 80 164)'
+	});
+</script>
+
+<div class="container">
+	<div class="page-header">
+		<h1 class="page-title">My Habits</h1>
+		<button class="add-btn" onclick={() => (showAddForm = !showAddForm)}>
+			<Icon icon="material-symbols:add" width="20" />
+			<span class="btn-text">Add Habit</span>
+		</button>
+	</div>
+
+	{#if showAddForm}
+		<div class="add-form">
+			<input
+				type="text"
+				bind:value={newHabitName}
+				placeholder="Habit name"
+				class="habit-input"
+			/>
+			<button
+				type="button"
+				class="color-button"
+				style="background-color: {newHabitColor}"
+				onclick={() => (showColorPicker = true)}
+			>
+				<Icon icon="material-symbols:palette-outline" width="20" />
+			</button>
+			<button
+				class="submit-btn"
+				onclick={async () => {
+					if (!newHabitName.trim()) return;
+					
+					const formData = new FormData();
+					formData.append('name', newHabitName);
+					formData.append('color', newHabitColor);
+					
+					const response = await fetch('?/createHabit', {
+						method: 'POST',
+						body: formData
+					});
+					
+					if (response.ok) {
+						showAddForm = false;
+						newHabitName = '';
+						newHabitColor = '#22C55E';
+						// Reload page to get new habit
+						window.location.reload();
+					}
+				}}
+			>
+				Create
+			</button>
+			<button type="button" class="cancel-btn" onclick={() => (showAddForm = false)}>
+				Cancel
+			</button>
+		</div>
+	{/if}
+
+	{#if habits.length === 0}
+		<div class="empty-state">
+			<Icon icon="material-symbols:check-circle-outline" width="64" />
+			<h2>No habits yet</h2>
+			<p>Create your first habit to start tracking!</p>
+		</div>
+	{:else}
+		<!-- Aggregated Calendar Grid -->
+		<div class="aggregated-calendar">
+			<h2 class="section-title">Activity Overview</h2>
+			<CalendarGrid data={aggregatedData} {colorMap} />
+			<div class="legend">
+				<span class="legend-label">Less</span>
+				<div class="legend-colors">
+					<div class="legend-box" style="background-color: {colorMap.level0}"></div>
+					<div class="legend-box" style="background-color: {colorMap.level1}"></div>
+					<div class="legend-box" style="background-color: {colorMap.level2}"></div>
+					<div class="legend-box" style="background-color: {colorMap.level3}"></div>
+					<div class="legend-box" style="background-color: {colorMap.level4}"></div>
+				</div>
+				<span class="legend-label">More</span>
+			</div>
+		</div>
+
+		<!-- Habit Rows -->
+		<div class="habits-section">
+			<h2 class="section-title">Habits</h2>
+			<div class="habits-list">
+				{#each habits as habit, index (habit.id)}
+					<div
+						class="habit-wrapper"
+						class:dragging={draggedIndex === index}
+						class:drop-target={dropTargetIndex === index && draggedIndex !== index}
+						draggable="true"
+						ondragstart={(e) => handleDragStart(e, index)}
+						ondragend={handleDragEnd}
+						ondragover={(e) => handleDragOver(e, index)}
+						ondrop={(e) => handleDrop(e, index)}
+					>
+						<HabitRow
+							{habit}
+							todayStamped={getTodayStamp(habit.id)}
+							onToggleToday={() => toggleStamp(habit.id)}
+							draggable={true}
+						/>
+					</div>
+				{/each}
+				
+				<!-- Drop zone at the end -->
+				<div
+					class="drop-zone"
+					class:active={dropTargetIndex === habits.length}
+					ondragover={(e) => handleDragOver(e, habits.length)}
+					ondrop={(e) => handleDrop(e, habits.length)}
+				></div>
+			</div>
+		</div>
+	{/if}
+</div>
+
+<!-- Color Picker Modal -->
+{#if showColorPicker}
+	<ColorPicker
+		selectedColor={newHabitColor}
+		onSelect={(color) => (newHabitColor = color)}
+		onClose={() => (showColorPicker = false)}
+	/>
+{/if}
+
+<style>
+	.container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 20px;
+	}
+
+	.page-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 32px;
+	}
+
+	.page-title {
+		font-size: 32px;
+		font-weight: 700;
+		color: rgb(var(--color-on-background));
+		margin: 0;
+	}
+
+	.add-btn {
+		background: rgb(103 80 164 / 0.15);
+		color: rgb(103 80 164);
+		border: none;
+		padding: 12px 24px;
+		border-radius: 24px;
+		cursor: pointer;
+		font-weight: 600;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		transition: all 0.2s;
+	}
+
+	.add-btn:hover {
+		background: rgb(103 80 164 / 0.25);
+	}
+
+	@media (prefers-color-scheme: dark) {
+		.add-btn {
+			background: rgb(167 139 250 / 0.15);
+			color: rgb(167 139 250);
+		}
+
+		.add-btn:hover {
+			background: rgb(167 139 250 / 0.25);
+		}
+	}
+
+	.add-form {
+		background: rgb(var(--color-surface));
+		border: 1px solid rgb(var(--color-outline-variant));
+		border-radius: 12px;
+		padding: 20px;
+		margin-bottom: 24px;
+		display: flex;
+		gap: 12px;
+		align-items: center;
+	}
+
+	.habit-input {
+		flex: 1;
+		padding: 12px 16px;
+		border: 1px solid rgb(var(--color-outline));
+		border-radius: 8px;
+		background: rgb(var(--color-background));
+		color: rgb(var(--color-on-background));
+		font-size: 16px;
+	}
+
+	.habit-input:focus {
+		outline: 2px solid rgb(var(--color-primary));
+		border-color: transparent;
+	}
+
+	.color-button {
+		width: 60px;
+		height: 44px;
+		border: 1px solid rgb(var(--color-outline));
+		border-radius: 8px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: white;
+		transition: all 0.2s;
+	}
+
+	.color-button:hover {
+		transform: scale(1.05);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	}
+
+	.submit-btn {
+		background: rgb(var(--color-primary));
+		color: rgb(var(--color-on-primary));
+		border: none;
+		padding: 12px 24px;
+		border-radius: 20px;
+		cursor: pointer;
+		font-weight: 600;
+		transition: all 0.2s;
+	}
+
+	.submit-btn:hover {
+		background: rgb(var(--color-primary) / 0.9);
+	}
+
+	.cancel-btn {
+		background: rgb(var(--color-surface-variant));
+		color: rgb(var(--color-on-surface-variant));
+		border: none;
+		padding: 12px 24px;
+		border-radius: 20px;
+		cursor: pointer;
+		font-weight: 600;
+		transition: all 0.2s;
+	}
+
+	.cancel-btn:hover {
+		background: rgb(var(--color-surface-variant) / 0.8);
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: 80px 20px;
+		color: rgb(var(--color-on-surface-variant));
+	}
+
+	.empty-state h2 {
+		font-size: 24px;
+		margin: 16px 0 8px;
+		color: rgb(var(--color-on-surface));
+	}
+
+	.aggregated-calendar {
+		background: rgb(var(--color-surface));
+		border: 1px solid rgb(var(--color-outline-variant));
+		border-radius: 12px;
+		padding: 24px;
+		margin-bottom: 32px;
+	}
+
+	.section-title {
+		font-size: 20px;
+		font-weight: 600;
+		color: rgb(var(--color-on-surface));
+		margin: 0 0 16px 0;
+	}
+
+	.legend {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-top: 12px;
+		font-size: 12px;
+		color: rgb(var(--color-on-surface-variant));
+	}
+
+	.legend-label {
+		font-weight: 500;
+	}
+
+	.legend-colors {
+		display: flex;
+		gap: 3px;
+	}
+
+	.legend-box {
+		width: 12px;
+		height: 12px;
+		border-radius: 2px;
+	}
+
+	.habits-section {
+		margin-bottom: 32px;
+	}
+
+	.habits-list {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.habit-wrapper {
+		position: relative;
+	}
+
+	.habit-wrapper.dragging {
+		opacity: 0.4;
+	}
+
+	.habit-wrapper.drop-target {
+		border-top: 3px solid rgb(var(--color-primary));
+		padding-top: 3px;
+		margin-top: -3px;
+	}
+
+	.drop-zone {
+		min-height: 48px;
+		position: relative;
+	}
+
+	.drop-zone.active::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3px;
+		background: rgb(var(--color-primary));
+		border-radius: 2px;
+	}
+
+	@media (max-width: 768px) {
+		.page-header {
+			flex-direction: row;
+			align-items: center;
+			gap: 16px;
+			justify-content: space-between;
+		}
+
+		.page-title {
+			font-size: 24px;
+		}
+
+		.add-btn .btn-text {
+			display: none;
+		}
+
+		.add-btn {
+			padding: 10px;
+			border-radius: 50%;
+			width: 40px;
+			height: 40px;
+			justify-content: center;
+		}
+
+		.add-form {
+			flex-direction: column;
+		}
+
+		.color-button {
+			width: 100%;
+		}
+
+		.aggregated-calendar {
+			padding: 16px;
+		}
+
+		.section-title {
+			font-size: 18px;
+		}
+	}
+</style>
