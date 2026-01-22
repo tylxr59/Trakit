@@ -6,10 +6,34 @@
 
 	let { data, children } = $props();
 
+	let isOnline = $state(true);
+
 	onMount(() => {
 		themeStore.init(data.theme);
+
+		// Check initial online status
+		isOnline = navigator.onLine;
+
+		// Listen for online/offline events
+		const handleOnline = () => (isOnline = true);
+		const handleOffline = () => (isOnline = false);
+
+		window.addEventListener('online', handleOnline);
+		window.addEventListener('offline', handleOffline);
+
+		return () => {
+			window.removeEventListener('online', handleOnline);
+			window.removeEventListener('offline', handleOffline);
+		};
 	});
 </script>
+
+{#if !isOnline}
+	<div class="offline-banner">
+		<Icon icon="material-symbols:cloud-off" width="20" />
+		<span>You're offline. Some features may be limited.</span>
+	</div>
+{/if}
 
 <div class="app">
 	{#if data.user}
@@ -49,6 +73,22 @@
 </div>
 
 <style>
+	.offline-banner {
+		background: rgb(var(--color-error-container));
+		color: rgb(var(--color-on-error-container));
+		padding: 12px 20px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		font-size: 14px;
+		font-weight: 500;
+		position: sticky;
+		top: 0;
+		z-index: 1000;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+
 	.app {
 		min-height: 100vh;
 		display: flex;
