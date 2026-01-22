@@ -51,6 +51,17 @@ export function isValidColor(color: string): boolean {
 }
 
 /**
+ * Validate frequency value
+ */
+export function isValidFrequency(frequency: string): boolean {
+	if (!frequency || typeof frequency !== 'string') {
+		return false;
+	}
+
+	return frequency === 'daily' || frequency === 'weekly' || frequency === 'monthly';
+}
+
+/**
  * Validate habit stamp value
  */
 export function isValidStampValue(value: any): boolean {

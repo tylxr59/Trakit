@@ -16,8 +16,14 @@
 	let showColorPicker = $state(false);
 	let newHabitName = $state('');
 	let newHabitColor = $state('#22C55E');
+	let newHabitFrequency = $state('daily');
 
 	const today = new Date().toISOString().split('T')[0];
+
+	// Group habits by frequency
+	const dailyHabits = $derived(habits.filter(h => h.frequency === 'daily'));
+	const weeklyHabits = $derived(habits.filter(h => h.frequency === 'weekly'));
+	const monthlyHabits = $derived(habits.filter(h => h.frequency === 'monthly'));
 
 	// Drag and drop state
 	let draggedIndex = $state<number | null>(null);
@@ -71,6 +77,35 @@
 
 			// Recalculate aggregated data
 			aggregatedData = recalculateAggregatedData();
+		}
+	}
+
+	async function updateHabit(
+		habitId: string,
+		updates: { name?: string; color?: string; frequency?: string }
+	) {
+		const response = await fetch('/api/habit', {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				habitId,
+				...updates
+			})
+		});
+
+		if (response.ok) {
+			// Update local state
+			habits = habits.map((h) => {
+				if (h.id === habitId) {
+					return {
+						...h,
+						...(updates.name && { name: updates.name }),
+						...(updates.color && { color: updates.color }),
+						...(updates.frequency && { frequency: updates.frequency })
+					};
+				}
+				return h;
+			});
 		}
 	}
 
@@ -189,6 +224,11 @@
 			>
 				<Icon icon="material-symbols:palette-outline" width="20" />
 			</button>
+			<select bind:value={newHabitFrequency} class="frequency-select">
+				<option value="daily">Daily</option>
+				<option value="weekly">Weekly</option>
+				<option value="monthly">Monthly</option>
+			</select>
 			<button
 				class="submit-btn"
 				onclick={async () => {
@@ -197,6 +237,7 @@
 					const formData = new FormData();
 					formData.append('name', newHabitName);
 					formData.append('color', newHabitColor);
+					formData.append('frequency', newHabitFrequency);
 					
 					const response = await fetch('?/createHabit', {
 						method: 'POST',
@@ -207,6 +248,7 @@
 						showAddForm = false;
 						newHabitName = '';
 						newHabitColor = '#22C55E';
+						newHabitFrequency = 'daily';
 						// Reload page to get new habit
 						window.location.reload();
 					}
@@ -244,39 +286,87 @@
 			</div>
 		</div>
 
-		<!-- Habit Rows -->
-		<div class="habits-section">
-			<h2 class="section-title">Habits</h2>
-			<div class="habits-list">
-				{#each habits as habit, index (habit.id)}
-					<div
-						class="habit-wrapper"
-						class:dragging={draggedIndex === index}
-						class:drop-target={dropTargetIndex === index && draggedIndex !== index}
-						draggable="true"
-						ondragstart={(e) => handleDragStart(e, index)}
-						ondragend={handleDragEnd}
-						ondragover={(e) => handleDragOver(e, index)}
-						ondrop={(e) => handleDrop(e, index)}
-					>
-						<HabitRow
-							{habit}
-							todayStamped={getTodayStamp(habit.id)}
-							onToggleToday={() => toggleStamp(habit.id)}
-							draggable={true}
-						/>
-					</div>
-				{/each}
-				
-				<!-- Drop zone at the end -->
-				<div
-					class="drop-zone"
-					class:active={dropTargetIndex === habits.length}
-					ondragover={(e) => handleDragOver(e, habits.length)}
-					ondrop={(e) => handleDrop(e, habits.length)}
-				></div>
+		<!-- Habit Rows by Frequency -->
+		{#if dailyHabits.length > 0}
+			<div class="habits-section">
+				<h2 class="section-title">Daily Habits</h2>
+				<div class="habits-list">
+					{#each dailyHabits as habit, index (habit.id)}
+						<div
+							class="habit-wrapper"
+							class:dragging={draggedIndex === habits.indexOf(habit)}
+							class:drop-target={dropTargetIndex === habits.indexOf(habit) && draggedIndex !== habits.indexOf(habit)}
+							draggable="true"
+							ondragstart={(e) => handleDragStart(e, habits.indexOf(habit))}
+							ondragend={handleDragEnd}
+							ondragover={(e) => handleDragOver(e, habits.indexOf(habit))}
+							ondrop={(e) => handleDrop(e, habits.indexOf(habit))}
+						>
+							<HabitRow
+								{habit}
+								todayStamped={getTodayStamp(habit.id)}
+								onToggleToday={() => toggleStamp(habit.id)}
+								draggable={true}
+							/>
+						</div>
+					{/each}
+				</div>
 			</div>
-		</div>
+		{/if}
+
+		{#if weeklyHabits.length > 0}
+			<div class="habits-section">
+				<h2 class="section-title">Weekly Habits</h2>
+				<div class="habits-list">
+					{#each weeklyHabits as habit, index (habit.id)}
+						<div
+							class="habit-wrapper"
+							class:dragging={draggedIndex === habits.indexOf(habit)}
+							class:drop-target={dropTargetIndex === habits.indexOf(habit) && draggedIndex !== habits.indexOf(habit)}
+							draggable="true"
+							ondragstart={(e) => handleDragStart(e, habits.indexOf(habit))}
+							ondragend={handleDragEnd}
+							ondragover={(e) => handleDragOver(e, habits.indexOf(habit))}
+							ondrop={(e) => handleDrop(e, habits.indexOf(habit))}
+						>
+							<HabitRow
+								{habit}
+								todayStamped={getTodayStamp(habit.id)}
+								onToggleToday={() => toggleStamp(habit.id)}
+								draggable={true}
+							/>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		{#if monthlyHabits.length > 0}
+			<div class="habits-section">
+				<h2 class="section-title">Monthly Habits</h2>
+				<div class="habits-list">
+					{#each monthlyHabits as habit, index (habit.id)}
+						<div
+							class="habit-wrapper"
+							class:dragging={draggedIndex === habits.indexOf(habit)}
+							class:drop-target={dropTargetIndex === habits.indexOf(habit) && draggedIndex !== habits.indexOf(habit)}
+							draggable="true"
+							ondragstart={(e) => handleDragStart(e, habits.indexOf(habit))}
+							ondragend={handleDragEnd}
+							ondragover={(e) => handleDragOver(e, habits.indexOf(habit))}
+							ondrop={(e) => handleDrop(e, habits.indexOf(habit))}
+						>
+							<HabitRow
+								{habit}
+								todayStamped={getTodayStamp(habit.id)}
+								onToggleToday={() => toggleStamp(habit.id)}
+								draggable={true}
+							/>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
 	{/if}
 </div>
 
@@ -361,6 +451,22 @@
 	}
 
 	.habit-input:focus {
+		outline: 2px solid rgb(var(--color-primary));
+		border-color: transparent;
+	}
+
+	.frequency-select {
+		padding: 12px 16px;
+		border: 1px solid rgb(var(--color-outline));
+		border-radius: 8px;
+		background: rgb(var(--color-background));
+		color: rgb(var(--color-on-background));
+		font-size: 16px;
+		cursor: pointer;
+		min-width: 120px;
+	}
+
+	.frequency-select:focus {
 		outline: 2px solid rgb(var(--color-primary));
 		border-color: transparent;
 	}

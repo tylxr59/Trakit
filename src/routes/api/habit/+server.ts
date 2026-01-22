@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { pool } from '$lib/server/db';
-import { validateHabitName, isValidColor } from '$lib/server/validation';
+import { validateHabitName, isValidColor, isValidFrequency } from '$lib/server/validation';
 import type { RequestHandler } from './$types';
 
 export const PATCH: RequestHandler = async ({ locals, request }) => {
@@ -8,7 +8,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 		throw error(401, 'Unauthorized');
 	}
 
-	const { habitId, name, color } = await request.json();
+	const { habitId, name, color, frequency } = await request.json();
 
 	if (!habitId) {
 		throw error(400, 'Habit ID is required');
@@ -41,6 +41,14 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 		}
 		updates.push(`color = $${paramCount++}`);
 		values.push(color);
+	}
+
+	if (frequency !== undefined) {
+		if (!isValidFrequency(frequency)) {
+			throw error(400, 'Invalid frequency. Must be daily, weekly, or monthly');
+		}
+		updates.push(`frequency = $${paramCount++}`);
+		values.push(frequency);
 	}
 
 	if (updates.length === 0) {

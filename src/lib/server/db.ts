@@ -20,6 +20,7 @@ export interface Habit {
 	user_id: string;
 	name: string;
 	color: string;
+	frequency: 'daily' | 'weekly' | 'monthly';
 	created_at: Date;
 }
 

@@ -5,6 +5,7 @@
 		id: string;
 		name: string;
 		color: string;
+		frequency: string;
 		currentStreak: number;
 	}
 

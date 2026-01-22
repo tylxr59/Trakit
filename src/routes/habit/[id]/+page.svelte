@@ -12,12 +12,56 @@
 	let showColorPicker = $state(false);
 	let editName = $state(data.habit.name);
 	let editColor = $state(data.habit.color);
+	let editFrequency = $state(data.habit.frequency || 'daily');
 	let habitName = $state(data.habit.name);
 	let habitColor = $state(data.habit.color);
+	let habitFrequency = $state(data.habit.frequency || 'daily');
 	let stamps = $state(data.stamps);
 	let currentStreak = $state(data.currentStreak);
 	let isSharing = $state(false);
 	let shareableSection: HTMLElement;
+
+	// Derived values for period-aware labels
+	const streakLabel = $derived(
+		habitFrequency === 'daily' 
+			? currentStreak === 1 ? 'Day' : 'Days'
+			: habitFrequency === 'weekly'
+			? currentStreak === 1 ? 'Week' : 'Weeks'
+			: currentStreak === 1 ? 'Month' : 'Months'
+	);
+
+	// Calculate period-aware completion rate
+	const completionRate = $derived(() => {
+		const completedStamps = stamps.filter((s) => s.value > 0);
+		if (habitFrequency === 'daily') {
+			return Math.round((completedStamps.length / Math.max(stamps.length, 1)) * 100);
+		} else if (habitFrequency === 'weekly') {
+			// Group by week and calculate completion rate
+			const weekMap = new Map();
+			stamps.forEach(stamp => {
+				const date = new Date(stamp.date);
+				const startOfYear = new Date(date.getFullYear(), 0, 1);
+				const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+				const week = Math.floor(days / 7);
+				const weekKey = `${date.getFullYear()}-W${week}`;
+				if (!weekMap.has(weekKey)) weekMap.set(weekKey, false);
+				if (stamp.value > 0) weekMap.set(weekKey, true);
+			});
+			const completedWeeks = Array.from(weekMap.values()).filter(v => v).length;
+			return Math.round((completedWeeks / Math.max(weekMap.size, 1)) * 100);
+		} else {
+			// Monthly: Group by month and calculate completion rate
+			const monthMap = new Map();
+			stamps.forEach(stamp => {
+				const date = new Date(stamp.date);
+				const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+				if (!monthMap.has(monthKey)) monthMap.set(monthKey, false);
+				if (stamp.value > 0) monthMap.set(monthKey, true);
+			});
+			const completedMonths = Array.from(monthMap.values()).filter(v => v).length;
+			return Math.round((completedMonths / Math.max(monthMap.size, 1)) * 100);
+		}
+	});
 
 	const colorMap = $derived({
 		level0: themeStore.value === 'dark' ? 'rgb(30 30 35)' : 'rgb(235 237 240)',
@@ -49,7 +93,9 @@
 			});
 			
 			const file = new File([blob], 'habit-progress.png', { type: 'image/png' });
-			const streakText = currentStreak === 1 ? '1 day streak' : `${currentStreak} day streak`;
+			const streakText = currentStreak === 1 
+				? `1 ${streakLabel.toLowerCase().slice(0, -1)} streak`
+				: `${currentStreak} ${streakLabel.toLowerCase()} streak`;
 			const shareText = `I'm on a ${streakText} with ${habitName}! 🔥\n\nTrack your habits at gettrakit.app`;
 			
 			if (navigator.share && navigator.canShare({ files: [file] })) {
@@ -92,22 +138,28 @@
 			body: JSON.stringify({
 				habitId: data.habit.id,
 				name: editName,
-				color: editColor
+				color: editColor,
+				frequency: editFrequency
 			})
 		});
 
 		if (response.ok) {
 			data.habit.name = editName;
 			data.habit.color = editColor;
+			data.habit.frequency = editFrequency;
 			habitName = editName;
 			habitColor = editColor;
+			habitFrequency = editFrequency;
 			showEditForm = false;
+			// Reload page to recalculate streak with new frequency
+			window.location.reload();
 		}
 	}
 
 	function cancelEdit() {
 		editName = data.habit.name;
 		editColor = data.habit.color;
+		editFrequency = data.habit.frequency || 'daily';
 		showEditForm = false;
 	}
 </script>
@@ -158,6 +210,14 @@
 						<Icon icon="material-symbols:palette-outline" width="20" />
 					</button>
 				</div>
+				<div class="form-group">
+					<label for="edit-frequency">Frequency</label>
+					<select id="edit-frequency" bind:value={editFrequency} class="form-select">
+						<option value="daily">Daily</option>
+						<option value="weekly">Weekly</option>
+						<option value="monthly">Monthly</option>
+					</select>
+				</div>
 			</div>
 			<div class="form-actions">
 				<button class="save-btn" onclick={saveEdit}>Save Changes</button>
@@ -196,7 +256,7 @@
 			</div>
 			<div class="stat-content">
 				<div class="stat-value">{currentStreak}</div>
-				<div class="stat-label">Current Streak</div>
+				<div class="stat-label">Current Streak ({streakLabel})</div>
 			</div>
 		</div>
 
@@ -215,13 +275,7 @@
 				<Icon icon="material-symbols:calendar-month" width="32" />
 			</div>
 			<div class="stat-content">
-				<div class="stat-value">
-					{Math.round(
-						(stamps.filter((s) => s.value > 0).length /
-							Math.max(stamps.length, 1)) *
-							100
-					)}%
-				</div>
+				<div class="stat-value">{completionRate()}%</div>
 				<div class="stat-label">Completion Rate</div>
 			</div>
 		</div>
@@ -409,6 +463,22 @@
 	}
 
 	.form-input:focus {
+		outline: 2px solid rgb(var(--color-primary));
+		border-color: transparent;
+	}
+
+	.form-select {
+		width: 100%;
+		padding: 12px 16px;
+		border: 1px solid rgb(var(--color-outline));
+		border-radius: 8px;
+		background: rgb(var(--color-background));
+		color: rgb(var(--color-on-background));
+		font-size: 16px;
+		cursor: pointer;
+	}
+
+	.form-select:focus {
 		outline: 2px solid rgb(var(--color-primary));
 		border-color: transparent;
 	}

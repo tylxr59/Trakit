@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-2.14-orange)](https://kit.svelte.dev/)
 
-[Features](#features) • [Quick Start](#quick-start) • [Deployment](#deployment) • [Documentation](#documentation)
+[Homepage](https://gettrakit.app) • [Features](#features) • [Quick Start](#quick-start) • [Deployment](#deployment) • [Documentation](#documentation)
 
 </div>
 
