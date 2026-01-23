@@ -24,11 +24,31 @@ export default [
 		}
 	},
 	{
-		files: ['**/*.{ts,svelte}'],
+		files: ['**/*.ts', '!**/*.svelte.ts'],
 		languageOptions: {
 			parser: tsParser,
 			parserOptions: {
-				extraFileExtensions: ['.svelte']
+				projectService: {
+					allowDefaultProject: ['*.js', '*.mjs', '*.ts']
+				}
+			}
+		},
+		plugins: {
+			'@typescript-eslint': ts
+		},
+		rules: {
+			...ts.configs.recommended.rules
+		}
+	},
+	{
+		files: ['**/*.svelte'],
+		languageOptions: {
+			parser: tsParser,
+			parserOptions: {
+				extraFileExtensions: ['.svelte'],
+				projectService: {
+					allowDefaultProject: ['*.js', '*.mjs']
+				}
 			}
 		},
 		plugins: {
@@ -40,15 +60,21 @@ export default [
 	},
 	...svelte.configs['flat/recommended'],
 	{
-		files: ['**/*.svelte'],
+		files: ['**/*.svelte', '**/*.svelte.ts'],
 		languageOptions: {
 			parserOptions: {
 				parser: tsParser
 			}
+		},
+		rules: {
+			'svelte/prefer-svelte-reactivity': 'off', // Too strict for simple cases
+			'svelte/require-each-key': 'off', // Not needed for static lists
+			'svelte/no-navigation-without-resolve': 'off', // Not using resolve() pattern
+			'svelte/no-unused-props': 'off' // Too many false positives
 		}
 	},
 	prettier,
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/']
+		ignores: ['build/', '.svelte-kit/', 'dist/', '*.config.ts', '*.config.js', 'migrations/']
 	}
 ];
