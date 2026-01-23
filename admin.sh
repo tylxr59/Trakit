@@ -32,6 +32,7 @@ run_query_formatted() {
 }
 
 while true; do
+    echo ""
     echo "Select an option:"
     echo "  1) Start Services"
     echo "  2) Update Application"
