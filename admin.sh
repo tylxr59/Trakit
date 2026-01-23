@@ -49,6 +49,55 @@ while true; do
     case $choice in
         1)
             echo ""
+            echo "🚀 Start Services"
+            echo "================="
+            echo ""
+            
+            echo "Starting Docker containers..."
+            docker compose up -d
+            
+            echo ""
+            echo "⏳ Waiting for services to start..."
+            sleep 5
+            
+            echo ""
+            echo "✅ Services started!"
+            echo ""
+            echo "🔍 Service status:"
+            docker compose ps
+            echo ""
+            read -p "Press Enter to continue..."
+            ;;
+
+        2)
+            echo ""
+            echo "🔄 Update Application"
+            echo "====================="
+            echo ""
+            
+            echo "🛑 Stopping Docker containers..."
+            docker compose down
+            
+            echo ""
+            echo "📥 Pulling latest changes from GitHub..."
+            git pull
+            
+            echo ""
+            echo "🐳 Rebuilding and starting Docker containers..."
+            docker compose up -d --build
+            
+            echo ""
+            echo "⏳ Waiting for services to start..."
+            sleep 5
+            
+            echo ""
+            echo "✅ Update complete!"
+            echo ""
+            read -p "Press Enter to continue..."
+            ;;
+
+        3)
+            echo ""
             echo "📊 User Statistics"
             echo "=================="
             echo ""
@@ -71,7 +120,7 @@ while true; do
             fi
             ;;
             
-        2)
+        4)
             echo ""
             echo "👥 All Users"
             echo "============"
@@ -84,7 +133,7 @@ while true; do
             ORDER BY created_at DESC;"
             ;;
             
-        3)
+        5)
             echo ""
             echo "📈 Habit Statistics"
             echo "==================="
@@ -111,7 +160,7 @@ while true; do
             LIMIT 10;"
             ;;
             
-        4)
+        6)
             read -p "Enter user email to DELETE: " user_email
             
             if [ -z "$user_email" ]; then
@@ -148,62 +197,13 @@ while true; do
             echo "✅ User deleted successfully"
             ;;
             
-        5)
+        7)
             echo ""
             echo "📜 Application Logs (last 50 lines)"
             echo "===================================="
             echo ""
             docker compose logs --tail=50 app
             
-            echo ""
-            read -p "Press Enter to continue..."
-            ;;
-            
-        6)
-            echo ""
-            echo "🔄 Update Application"
-            echo "====================="
-            echo ""
-            
-            echo "🛑 Stopping Docker containers..."
-            docker compose down
-            
-            echo ""
-            echo "📥 Pulling latest changes from GitHub..."
-            git pull
-            
-            echo ""
-            echo "🐳 Rebuilding and starting Docker containers..."
-            docker compose up -d --build
-            
-            echo ""
-            echo "⏳ Waiting for services to start..."
-            sleep 5
-            
-            echo ""
-            echo "✅ Update complete!"
-            echo ""
-            read -p "Press Enter to continue..."
-            ;;
-            
-        7)
-            echo ""
-            echo "🚀 Start Services"
-            echo "================="
-            echo ""
-            
-            echo "Starting Docker containers..."
-            docker compose up -d
-            
-            echo ""
-            echo "⏳ Waiting for services to start..."
-            sleep 5
-            
-            echo ""
-            echo "✅ Services started!"
-            echo ""
-            echo "🔍 Service status:"
-            docker compose ps
             echo ""
             read -p "Press Enter to continue..."
             ;;
