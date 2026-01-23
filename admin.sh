@@ -20,7 +20,6 @@ cd $APP_DIR
 
 echo "🔧 Trakit - Admin Dashboard"
 echo "==========================="
-echo ""
 
 # Function to run SQL query
 run_query() {
@@ -33,15 +32,14 @@ run_query_formatted() {
 }
 
 while true; do
-    echo ""
     echo "Select an option:"
-    echo "  1) User Statistics"
-    echo "  2) List All Users"
-    echo "  3) Habit Statistics"
-    echo "  4) Delete User (by email)"
-    echo "  5) View Logs"
-    echo "  6) Update Application"
-    echo "  7) Start Services"
+    echo "  1) Start Services"
+    echo "  2) Update Application"
+    echo "  3) User Statistics"
+    echo "  4) List All Users"
+    echo "  5) Habit Statistics"
+    echo "  6) Delete User (by email)"
+    echo "  7) View Logs"
     echo "  8) Exit"
     echo ""
     read -p "Enter option (1-8): " choice
