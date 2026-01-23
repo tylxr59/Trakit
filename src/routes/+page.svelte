@@ -10,6 +10,7 @@
 	// Create reactive values from server data
 	let habits = $derived(data.habits);
 	let aggregatedData = $derived(data.aggregatedData);
+	let userTimezone = $derived(data.userTimezone || 'UTC');
 
 	let showAddForm = $state(false);
 	let showColorPicker = $state(false);
@@ -17,7 +18,8 @@
 	let newHabitColor = $state('#22C55E');
 	let newHabitFrequency = $state('daily');
 
-	const today = new Date().toISOString().split('T')[0];
+	// Get today's date in the user's timezone
+	const today = $derived(new Date().toLocaleDateString('en-CA', { timeZone: userTimezone }));
 
 	// Group habits by frequency
 	const dailyHabits = $derived(habits.filter(h => h.frequency === 'daily'));
@@ -170,8 +172,18 @@
 </script>
 
 <div class="container">
+	<!-- Greeting Section -->
+	{#if data.user?.displayName}
+		<div class="greeting">
+			<h2 class="greeting-text">
+				<span>Hi {data.user.displayName}!</span>
+				<Icon icon="material-symbols:waving-hand" width="32" />
+			</h2>
+		</div>
+	{/if}
+
 	<div class="page-header">
-		<h1 class="page-title">My Habits</h1>
+		<h1 class="page-title">Your Habits</h1>
 		<button class="add-btn" onclick={() => (showAddForm = !showAddForm)}>
 			<Icon icon="material-symbols:add" width="20" />
 			<span class="btn-text">Add Habit</span>
@@ -362,6 +374,20 @@
 		padding: 0 20px;
 	}
 
+	.greeting {
+		margin-bottom: 20px;
+	}
+
+	.greeting-text {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		font-size: 28px;
+		font-weight: 600;
+		color: rgb(var(--color-on-surface));
+		margin: 0;
+	}
+
 	.page-header {
 		display: flex;
 		justify-content: space-between;
@@ -370,7 +396,7 @@
 	}
 
 	.page-title {
-		font-size: 32px;
+		font-size: 20px;
 		font-weight: 700;
 		color: rgb(var(--color-on-background));
 		margin: 0;
@@ -571,6 +597,10 @@
 	}
 
 	@media (max-width: 768px) {
+		.greeting-text {
+			font-size: 24px;
+		}
+
 		.page-header {
 			flex-direction: row;
 			align-items: center;
@@ -579,7 +609,7 @@
 		}
 
 		.page-title {
-			font-size: 24px;
+			font-size: 18px;
 		}
 
 		.add-btn .btn-text {

@@ -12,6 +12,8 @@ export interface User {
 	email: string;
 	email_verified: boolean;
 	password_hash: string;
+	display_name: string | null;
+	timezone: string | null;
 	created_at: Date;
 }
 

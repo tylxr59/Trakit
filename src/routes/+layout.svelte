@@ -44,6 +44,9 @@
 					Trakit
 				</h1>
 				<div class="header-actions">
+					<a href="/settings" class="settings-link" aria-label="Settings">
+						<Icon icon="material-symbols:settings" width="24" />
+					</a>
 					<button
 						class="theme-toggle"
 						onclick={() => themeStore.toggle()}
@@ -125,6 +128,24 @@
 		display: flex;
 		gap: 12px;
 		align-items: center;
+	}
+
+	.settings-link {
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: rgb(var(--color-on-surface));
+		padding: 8px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: background 0.2s;
+		text-decoration: none;
+	}
+
+	.settings-link:hover {
+		background: rgb(var(--color-surface-variant) / 0.3);
 	}
 
 	.theme-toggle {

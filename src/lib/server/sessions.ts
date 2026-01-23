@@ -22,6 +22,8 @@ export interface User {
 	id: string;
 	email: string;
 	emailVerified: boolean;
+	displayName: string | null;
+	timezone: string | null;
 }
 
 // Session configuration
@@ -94,7 +96,7 @@ export async function validateSession(
 	const result = await pool.query(
 		`SELECT 
 			s.id, s.user_id, s.expires_at, s.csrf_token,
-			u.email, u.email_verified
+			u.email, u.email_verified, u.display_name, u.timezone
 		FROM sessions s
 		JOIN users u ON s.user_id = u.id
 		WHERE s.id = $1`,
@@ -116,7 +118,9 @@ export async function validateSession(
 	const user: User = {
 		id: row.user_id,
 		email: row.email,
-		emailVerified: row.email_verified
+		emailVerified: row.email_verified,
+		displayName: row.display_name,
+		timezone: row.timezone
 	};
 
 	// Check if session is expired

@@ -37,6 +37,20 @@
 
 			<form method="POST" use:enhance>
 				<div class="form-group">
+					<label for="displayName">Display Name</label>
+					<input
+						type="text"
+						id="displayName"
+						name="displayName"
+						required
+						maxlength="100"
+						autocomplete="name"
+						class="form-input"
+						placeholder="How should we call you?"
+					/>
+				</div>
+
+				<div class="form-group">
 					<label for="email">Email</label>
 					<input
 						type="email"
@@ -60,6 +74,34 @@
 						class="form-input"
 					/>
 					<small>Minimum 8 characters</small>
+				</div>
+
+				<div class="form-group">
+					<label for="timezone">Timezone</label>
+					<select id="timezone" name="timezone" class="form-input" required>
+						<option value="">Select your timezone</option>
+						<option value="UTC">UTC</option>
+						<option value="America/New_York">Eastern Time (US & Canada)</option>
+						<option value="America/Chicago">Central Time (US & Canada)</option>
+						<option value="America/Denver">Mountain Time (US & Canada)</option>
+						<option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+						<option value="America/Anchorage">Alaska</option>
+						<option value="Pacific/Honolulu">Hawaii</option>
+						<option value="Europe/London">London</option>
+						<option value="Europe/Paris">Paris</option>
+						<option value="Europe/Berlin">Berlin</option>
+						<option value="Europe/Madrid">Madrid</option>
+						<option value="Europe/Rome">Rome</option>
+						<option value="Asia/Dubai">Dubai</option>
+						<option value="Asia/Kolkata">India</option>
+						<option value="Asia/Shanghai">Shanghai</option>
+						<option value="Asia/Tokyo">Tokyo</option>
+						<option value="Asia/Hong_Kong">Hong Kong</option>
+						<option value="Asia/Singapore">Singapore</option>
+						<option value="Australia/Sydney">Sydney</option>
+						<option value="Pacific/Auckland">Auckland</option>
+					</select>
+					<small>Used to accurately track daily habits</small>
 				</div>
 
 				<button type="submit" class="submit-btn">Create Account</button>

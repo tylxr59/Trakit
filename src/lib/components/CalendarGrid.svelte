@@ -32,7 +32,8 @@
 	// Generate past 26 weeks (182 days) - about 6 months
 	const days = $derived.by(() => {
 		const today = new Date();
-		const startDate = new Date(today);
+		// Use local date to avoid timezone issues
+		const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 		// Go back to the most recent Sunday
 		const dayOfWeek = startDate.getDay();
 		startDate.setDate(startDate.getDate() - dayOfWeek);
@@ -54,7 +55,11 @@
 		for (let i = 0; i < 182; i++) {
 			const date = new Date(startDate);
 			date.setDate(date.getDate() + i);
-			const dateStr = date.toISOString().split('T')[0];
+			// Format date string without timezone conversion
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			const dateStr = `${year}-${month}-${day}`;
 			const value = dataMap.get(dateStr) || 0;
 			
 			result.push({

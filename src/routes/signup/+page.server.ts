@@ -43,10 +43,27 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
+		const displayName = formData.get('displayName') as string;
+		const timezone = formData.get('timezone') as string;
 
 		if (!email || !password) {
 			signupRateLimiter.recordAttempt(clientIP);
 			return fail(400, { message: 'Email and password are required' });
+		}
+
+		if (!displayName || displayName.trim().length === 0) {
+			signupRateLimiter.recordAttempt(clientIP);
+			return fail(400, { message: 'Display name is required' });
+		}
+
+		if (displayName.length > 100) {
+			signupRateLimiter.recordAttempt(clientIP);
+			return fail(400, { message: 'Display name is too long (max 100 characters)' });
+		}
+
+		if (!timezone) {
+			signupRateLimiter.recordAttempt(clientIP);
+			return fail(400, { message: 'Timezone is required' });
 		}
 
 		// Validate email format
@@ -95,8 +112,8 @@ export const actions: Actions = {
 
 		// Insert user and get the generated UUID
 		const userResult = await pool.query(
-			'INSERT INTO users (email, password_hash, email_verified) VALUES ($1, $2, $3) RETURNING id',
-			[email, passwordHash, emailVerified]
+			'INSERT INTO users (email, password_hash, email_verified, display_name, timezone) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+			[email, passwordHash, emailVerified, displayName.trim(), timezone]
 		);
 
 		const userId = userResult.rows[0].id;
