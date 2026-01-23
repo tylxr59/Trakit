@@ -57,6 +57,7 @@
 						/>
 					</button>
 					<form method="POST" action="/logout">
+						<input type="hidden" name="csrf_token" value={data.csrfToken} />
 						<button class="logout-btn" type="submit">
 							<Icon icon="material-symbols:logout" width="20" />
 							Logout

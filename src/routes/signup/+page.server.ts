@@ -1,7 +1,7 @@
 import { redirect, fail } from '@sveltejs/kit';
 import { hash } from '@node-rs/argon2';
 import { pool } from '$lib/server/db';
-import { lucia } from '$lib/server/lucia';
+import { createSession, setSessionCookie, setCSRFCookie } from '$lib/server/sessions';
 import { sendVerificationEmail } from '$lib/server/email';
 import { signupRateLimiter, getClientIP } from '$lib/server/rateLimit';
 import { isValidEmail } from '$lib/server/validation';
@@ -132,12 +132,9 @@ export const actions: Actions = {
 		}
 
 		// Auto-login if verification not required
-		const session = await lucia.createSession(userId, {});
-		const sessionCookie = lucia.createSessionCookie(session.id);
-		cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '.',
-			...sessionCookie.attributes
-		});
+		const { token, session } = await createSession(userId);
+		setSessionCookie(cookies, token, session.expiresAt);
+		setCSRFCookie(cookies, session.csrfToken, session.expiresAt);
 
 		throw redirect(302, '/');
 	}

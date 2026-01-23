@@ -22,7 +22,7 @@ Trakit is a self-hosted habit tracking application built with SvelteKit, TypeScr
 
 - 🎨 **Material 3 Design** - Beautiful, modern UI with dark/light mode
 - 📊 **GitHub-style Calendar** - Visual habit tracking with color-coded squares
-- 🔐 **Secure Authentication** - Lucia auth with optional email verification
+- 🔐 **Secure Authentication** - Custom session management with CSRF protection and optional email verification
 - 🐳 **Docker Ready** - One-command deployment with auto-HTTPS
 - 🔒 **Privacy First** - Self-hosted, no external SaaS dependencies
 - ⚡ **Fast & Responsive** - Optimized for performance on all devices
@@ -31,7 +31,7 @@ Trakit is a self-hosted habit tracking application built with SvelteKit, TypeScr
 ## Tech Stack
 
 - **Frontend**: SvelteKit 2.14 (Svelte 5), TypeScript, Tailwind CSS
-- **Backend**: SvelteKit API routes, Lucia auth
+- **Backend**: SvelteKit API routes, custom session-based authentication with CSRF protection
 - **Database**: PostgreSQL 16 with migrations
 - **Icons**: Iconify (Material Symbols)
 - **Email**: Nodemailer (SMTP)
@@ -234,10 +234,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Built with amazing open-source tools:
 
 - [SvelteKit](https://kit.svelte.dev/) - Web framework
-- [Lucia](https://lucia-auth.com/) - Authentication
 - [PostgreSQL](https://www.postgresql.org/) - Database
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Iconify](https://iconify.design/) - Icons
+- [@oslojs](https://oslojs.dev/) - Cryptographic utilities
 
 ---
 

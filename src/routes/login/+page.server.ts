@@ -1,7 +1,7 @@
 import { redirect, fail } from '@sveltejs/kit';
 import { verify } from '@node-rs/argon2';
 import { pool } from '$lib/server/db';
-import { lucia } from '$lib/server/lucia';
+import { createSession, setSessionCookie, setCSRFCookie } from '$lib/server/sessions';
 import { loginRateLimiter, verificationRateLimiter, getClientIP } from '$lib/server/rateLimit';
 import { constantTimeCompare } from '$lib/server/validation';
 import { logSecurityEvent, createSecurityEvent } from '$lib/server/logger';
@@ -145,12 +145,9 @@ export const actions: Actions = {
 			verificationRateLimiter.reset(clientIP + ':' + user.id);
 		}
 
-		const session = await lucia.createSession(user.id, {});
-		const sessionCookie = lucia.createSessionCookie(session.id);
-		cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '.',
-			...sessionCookie.attributes
-		});
+		const { token, session } = await createSession(user.id);
+		setSessionCookie(cookies, token, session.expiresAt);
+		setCSRFCookie(cookies, session.csrfToken, session.expiresAt);
 
 		// Reset rate limit on successful login
 		loginRateLimiter.reset(clientIP);
