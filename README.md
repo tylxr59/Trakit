@@ -99,15 +99,9 @@ curl -fsSL https://github.com/tylxr59/Trakit/raw/refs/heads/main/setup.sh -o set
 
 ### Management Scripts
 
-Once installed, you have access to management scripts in `/opt/trakit/`:
+Once installed, you have access to the admin script in `/opt/trakit/`:
 
-**Update to latest version:**
-
-```bash
-cd /opt/trakit && sudo ./update.sh
-```
-
-**Admin dashboard** for user management and statistics:
+**Admin dashboard** for management, updates, and statistics:
 
 ```bash
 cd /opt/trakit && sudo ./admin.sh
@@ -120,16 +114,12 @@ Available admin functions:
 - View habit statistics
 - Delete users
 - View application logs
+- Update application to latest version
+- Start services (after reboot)
 
 ### Post-Installation
 
-**Update to latest version:**
-
-```bash
-cd /opt/trakit && sudo ./update.sh
-```
-
-**Admin dashboard** for user management and statistics:
+**Admin dashboard** for updates, management, and statistics:
 
 ```bash
 cd /opt/trakit && sudo ./admin.sh

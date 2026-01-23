@@ -40,9 +40,11 @@ while true; do
     echo "  3) Habit Statistics"
     echo "  4) Delete User (by email)"
     echo "  5) View Logs"
-    echo "  6) Exit"
+    echo "  6) Update Application"
+    echo "  7) Start Services"
+    echo "  8) Exit"
     echo ""
-    read -p "Enter option (1-6): " choice
+    read -p "Enter option (1-8): " choice
 
     case $choice in
         1)
@@ -158,6 +160,55 @@ while true; do
             ;;
             
         6)
+            echo ""
+            echo "🔄 Update Application"
+            echo "====================="
+            echo ""
+            
+            echo "🛑 Stopping Docker containers..."
+            docker compose down
+            
+            echo ""
+            echo "📥 Pulling latest changes from GitHub..."
+            git pull
+            
+            echo ""
+            echo "🐳 Rebuilding and starting Docker containers..."
+            docker compose up -d --build
+            
+            echo ""
+            echo "⏳ Waiting for services to start..."
+            sleep 5
+            
+            echo ""
+            echo "✅ Update complete!"
+            echo ""
+            read -p "Press Enter to continue..."
+            ;;
+            
+        7)
+            echo ""
+            echo "🚀 Start Services"
+            echo "================="
+            echo ""
+            
+            echo "Starting Docker containers..."
+            docker compose up -d
+            
+            echo ""
+            echo "⏳ Waiting for services to start..."
+            sleep 5
+            
+            echo ""
+            echo "✅ Services started!"
+            echo ""
+            echo "🔍 Service status:"
+            docker compose ps
+            echo ""
+            read -p "Press Enter to continue..."
+            ;;
+            
+        8)
             echo ""
             echo "Goodbye!"
             exit 0
