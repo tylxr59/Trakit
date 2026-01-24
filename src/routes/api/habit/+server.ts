@@ -49,7 +49,6 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 		}
 		updates.push(`frequency = $${paramCount++}`);
 		values.push(frequency as string);
-		values.push(frequency);
 	}
 
 	if (updates.length === 0) {
