@@ -61,9 +61,8 @@
 					</button>
 					<form method="POST" action="/logout">
 						<input type="hidden" name="csrf_token" value={data.csrfToken} />
-						<button class="logout-btn" type="submit">
+						<button class="logout-btn" type="submit" title="Logout">
 							<Icon icon="material-symbols:logout" width="20" />
-							Logout
 						</button>
 					</form>
 				</div>
@@ -166,21 +165,20 @@
 	}
 
 	.logout-btn {
-		background: rgb(var(--color-error) / 0.1);
-		color: rgb(var(--color-error));
+		background: transparent;
+		color: rgb(var(--color-on-surface));
 		border: none;
-		padding: 8px 16px;
-		border-radius: 20px;
+		padding: 8px;
+		border-radius: 8px;
 		cursor: pointer;
-		font-weight: 500;
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		justify-content: center;
 		transition: all 0.2s;
 	}
 
 	.logout-btn:hover {
-		background: rgb(var(--color-error) / 0.15);
+		background: rgb(var(--color-surface-variant) / 0.5);
 	}
 
 	.main {

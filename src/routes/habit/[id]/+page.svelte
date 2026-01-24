@@ -202,40 +202,31 @@
 
 	{#if showEditForm}
 		<div class="edit-form">
-			<div class="form-row">
-				<div class="form-group">
-					<label for="edit-name">Habit Name</label>
-					<input
-						type="text"
-						id="edit-name"
-						bind:value={editName}
-						class="form-input"
-						placeholder="Habit name"
-					/>
-				</div>
-				<div class="form-group">
-					<label for="edit-color">Color</label>
-					<button
-						type="button"
-						id="edit-color"
-						class="color-button"
-						style="background-color: {editColor}"
-						onclick={() => (showColorPicker = true)}
-					>
-						<Icon icon="material-symbols:palette-outline" width="20" />
-					</button>
-				</div>
-				<div class="form-group">
-					<label for="edit-frequency">Frequency</label>
-					<select id="edit-frequency" bind:value={editFrequency} class="form-select">
-						<option value="daily">Daily</option>
-						<option value="weekly">Weekly</option>
-						<option value="monthly">Monthly</option>
-					</select>
-				</div>
+			<div class="form-group-row">
+				<input
+					type="text"
+					id="edit-name"
+					bind:value={editName}
+					class="form-input"
+					placeholder="Habit name"
+				/>
+				<button
+					type="button"
+					id="edit-color"
+					class="color-button"
+					style="background-color: {editColor}"
+					onclick={() => (showColorPicker = true)}
+				>
+					<Icon icon="material-symbols:palette-outline" width="20" />
+				</button>
 			</div>
+			<select id="edit-frequency" bind:value={editFrequency} class="form-select">
+				<option value="daily">Daily</option>
+				<option value="weekly">Weekly</option>
+				<option value="monthly">Monthly</option>
+			</select>
 			<div class="form-actions">
-				<button class="save-btn" onclick={saveEdit}>Save Changes</button>
+				<button class="save-btn" onclick={saveEdit}>Save</button>
 				<button class="cancel-btn" onclick={cancelEdit}>Cancel</button>
 			</div>
 		</div>
@@ -447,28 +438,21 @@
 		border-radius: 12px;
 		padding: 20px;
 		margin-bottom: 24px;
-	}
-
-	.form-row {
 		display: flex;
-		gap: 16px;
-		margin-bottom: 16px;
+		gap: 12px;
+		align-items: center;
 	}
 
-	.form-group {
-		flex: 1;
+	.form-group-row {
+		display: contents;
 	}
 
-	.form-group label {
-		display: block;
-		margin-bottom: 8px;
-		font-weight: 500;
-		color: rgb(var(--color-on-surface));
-		font-size: 14px;
+	.form-actions {
+		display: contents;
 	}
 
 	.form-input {
-		width: 100%;
+		flex: 1;
 		padding: 12px 16px;
 		border: 1px solid rgb(var(--color-outline));
 		border-radius: 8px;
@@ -483,7 +467,6 @@
 	}
 
 	.form-select {
-		width: 100%;
 		padding: 12px 16px;
 		border: 1px solid rgb(var(--color-outline));
 		border-radius: 8px;
@@ -491,6 +474,7 @@
 		color: rgb(var(--color-on-background));
 		font-size: 16px;
 		cursor: pointer;
+		min-width: 120px;
 	}
 
 	.form-select:focus {
@@ -499,7 +483,7 @@
 	}
 
 	.color-button {
-		width: 100%;
+		width: 60px;
 		height: 44px;
 		border: 1px solid rgb(var(--color-outline));
 		border-radius: 8px;
@@ -508,26 +492,19 @@
 		align-items: center;
 		justify-content: center;
 		color: white;
-		font-weight: 600;
 		transition: all 0.2s;
 	}
 
 	.color-button:hover {
-		transform: scale(1.02);
+		transform: scale(1.05);
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-	}
-
-	.form-actions {
-		display: flex;
-		gap: 12px;
-		justify-content: flex-end;
 	}
 
 	.save-btn {
 		background: rgb(var(--color-primary));
 		color: rgb(var(--color-on-primary));
 		border: none;
-		padding: 10px 24px;
+		padding: 12px 24px;
 		border-radius: 20px;
 		cursor: pointer;
 		font-weight: 600;
@@ -542,7 +519,7 @@
 		background: rgb(var(--color-surface-variant));
 		color: rgb(var(--color-on-surface-variant));
 		border: none;
-		padding: 10px 24px;
+		padding: 12px 24px;
 		border-radius: 20px;
 		cursor: pointer;
 		font-weight: 600;
@@ -777,8 +754,45 @@
 			gap: 12px;
 		}
 
-		.form-row {
+		/* Edit form mobile layout */
+		.edit-form {
 			flex-direction: column;
+			gap: 12px;
+		}
+
+		.form-group-row {
+			display: flex;
+			flex-direction: row;
+			gap: 12px;
+			width: 100%;
+		}
+
+		.form-input {
+			flex: 1;
+			min-width: 0;
+		}
+
+		.color-button {
+			width: 60px;
+			height: 48px;
+			flex-shrink: 0;
+		}
+
+		.form-select {
+			width: 100%;
+			min-width: unset;
+		}
+
+		.form-actions {
+			display: flex;
+			gap: 12px;
+			width: 100%;
+		}
+
+		.save-btn,
+		.cancel-btn {
+			flex: 1;
+			width: 50%;
 		}
 
 		.shareable-content {

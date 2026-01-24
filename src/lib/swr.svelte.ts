@@ -18,11 +18,7 @@ interface SwrOptions {
 }
 
 export function useAutoRefetch(options: SwrOptions = {}) {
-	const {
-		debounceMs = 3000,
-		refetchOnFocus = true,
-		refetchOnReconnect = true
-	} = options;
+	const { debounceMs = 3000, refetchOnFocus = true, refetchOnReconnect = true } = options;
 
 	if (!browser) return;
 

@@ -200,55 +200,59 @@
 
 	{#if showAddForm}
 		<div class="add-form">
-			<input
-				type="text"
-				bind:value={newHabitName}
-				placeholder="Habit name"
-				class="habit-input"
-			/>
-			<button
-				type="button"
-				class="color-button"
-				style="background-color: {newHabitColor}"
-				onclick={() => (showColorPicker = true)}
-			>
-				<Icon icon="material-symbols:palette-outline" width="20" />
-			</button>
+			<div class="add-form-row">
+				<input
+					type="text"
+					bind:value={newHabitName}
+					placeholder="Habit name"
+					class="habit-input"
+				/>
+				<button
+					type="button"
+					class="color-button"
+					style="background-color: {newHabitColor}"
+					onclick={() => (showColorPicker = true)}
+				>
+					<Icon icon="material-symbols:palette-outline" width="20" />
+				</button>
+			</div>
 			<select bind:value={newHabitFrequency} class="frequency-select">
 				<option value="daily">Daily</option>
 				<option value="weekly">Weekly</option>
 				<option value="monthly">Monthly</option>
 			</select>
-			<button
-				class="submit-btn"
-				onclick={async () => {
-					if (!newHabitName.trim()) return;
-					
-					const formData = new FormData();
-					formData.append('name', newHabitName);
-					formData.append('color', newHabitColor);
-					formData.append('frequency', newHabitFrequency);
-					
-					const response = await fetch('?/createHabit', {
-						method: 'POST',
-						body: formData
-					});
-					
-					if (response.ok) {
-						showAddForm = false;
-						newHabitName = '';
-						newHabitColor = '#22C55E';
-						newHabitFrequency = 'daily';
-						// Refresh data to get new habit
-						await invalidateAll();
-					}
-				}}
-			>
-				Create
-			</button>
-			<button type="button" class="cancel-btn" onclick={() => (showAddForm = false)}>
-				Cancel
-			</button>
+			<div class="add-form-buttons">
+				<button
+					class="submit-btn"
+					onclick={async () => {
+						if (!newHabitName.trim()) return;
+						
+						const formData = new FormData();
+						formData.append('name', newHabitName);
+						formData.append('color', newHabitColor);
+						formData.append('frequency', newHabitFrequency);
+						
+						const response = await fetch('?/createHabit', {
+							method: 'POST',
+							body: formData
+						});
+						
+						if (response.ok) {
+							showAddForm = false;
+							newHabitName = '';
+							newHabitColor = '#22C55E';
+							newHabitFrequency = 'daily';
+							// Refresh data to get new habit
+							await invalidateAll();
+						}
+					}}
+				>
+					Create
+				</button>
+				<button type="button" class="cancel-btn" onclick={() => (showAddForm = false)}>
+					Cancel
+				</button>
+			</div>
 		</div>
 	{/if}
 
@@ -450,6 +454,14 @@
 		align-items: center;
 	}
 
+	.add-form-row {
+		display: contents;
+	}
+
+	.add-form-buttons {
+		display: contents;
+	}
+
 	.habit-input {
 		flex: 1;
 		padding: 12px 16px;
@@ -634,10 +646,41 @@
 
 		.add-form {
 			flex-direction: column;
+			gap: 12px;
+		}
+
+		.add-form-row {
+			display: flex;
+			gap: 12px;
+			width: 100%;
+		}
+
+		.habit-input {
+			flex: 1;
 		}
 
 		.color-button {
+			width: 60px;
+			min-width: 60px;
+			height: 48px;
+			flex-shrink: 0;
+		}
+
+		.frequency-select {
 			width: 100%;
+			min-width: unset;
+		}
+
+		.add-form-buttons {
+			display: flex;
+			gap: 12px;
+			width: 100%;
+		}
+
+		.submit-btn,
+		.cancel-btn {
+			flex: 1;
+			width: 50%;
 		}
 
 		.aggregated-calendar {
