@@ -45,6 +45,19 @@ export function useAutoRefetch(options: SwrOptions = {}) {
 		}
 	};
 
+	// Handle window focus (important for PWAs)
+	const handleFocus = () => {
+		performRefetch();
+	};
+
+	// Handle page show (for back/forward navigation and PWA resume)
+	const handlePageShow = (event: PageTransitionEvent) => {
+		// persisted = true means page was loaded from cache (back/forward)
+		if (event.persisted) {
+			performRefetch();
+		}
+	};
+
 	// Handle network reconnect
 	const handleOnline = () => {
 		performRefetch();
@@ -53,6 +66,8 @@ export function useAutoRefetch(options: SwrOptions = {}) {
 	// Set up listeners
 	if (refetchOnFocus) {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
+		window.addEventListener('focus', handleFocus);
+		window.addEventListener('pageshow', handlePageShow);
 	}
 
 	if (refetchOnReconnect) {
@@ -63,6 +78,8 @@ export function useAutoRefetch(options: SwrOptions = {}) {
 	return () => {
 		if (refetchOnFocus) {
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
+			window.removeEventListener('focus', handleFocus);
+			window.removeEventListener('pageshow', handlePageShow);
 		}
 		if (refetchOnReconnect) {
 			window.removeEventListener('online', handleOnline);
