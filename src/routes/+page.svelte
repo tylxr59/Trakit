@@ -41,51 +41,153 @@
 	function getTodayStamp(habitId: string) {
 		const habit = habits.find((h) => h.id === habitId);
 		if (!habit) return false;
-		return habit.stamps.some((s) => s.date === today && s.value > 0);
+		
+		// For daily habits, check today's date
+		if (habit.frequency === 'daily') {
+			return habit.stamps.some((s) => s.date === today && s.value > 0);
+		}
+		
+		// For weekly habits, check if there's any stamp in the current week
+		if (habit.frequency === 'weekly') {
+			const todayDate = new Date(today + 'T00:00:00');
+			const startOfYear = new Date(todayDate.getFullYear(), 0, 1);
+			const days = Math.floor((todayDate.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+			const currentWeek = Math.floor(days / 7);
+			const currentWeekKey = `${todayDate.getFullYear()}-W${currentWeek}`;
+			
+			return habit.stamps.some((s) => {
+				const stampDate = new Date(s.date + 'T00:00:00');
+				const stampStartOfYear = new Date(stampDate.getFullYear(), 0, 1);
+				const stampDays = Math.floor((stampDate.getTime() - stampStartOfYear.getTime()) / (24 * 60 * 60 * 1000));
+				const stampWeek = Math.floor(stampDays / 7);
+				const stampWeekKey = `${stampDate.getFullYear()}-W${stampWeek}`;
+				return stampWeekKey === currentWeekKey && s.value > 0;
+			});
+		}
+		
+		// For monthly habits, check if there's any stamp in the current month
+		if (habit.frequency === 'monthly') {
+			const todayDate = new Date(today + 'T00:00:00');
+			const currentMonthKey = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`;
+			
+			return habit.stamps.some((s) => {
+				const stampDate = new Date(s.date + 'T00:00:00');
+				const stampMonthKey = `${stampDate.getFullYear()}-${String(stampDate.getMonth() + 1).padStart(2, '0')}`;
+				return stampMonthKey === currentMonthKey && s.value > 0;
+			});
+		}
+		
+		return false;
 	}
 
 	async function toggleStamp(habitId: string) {
+		const habit = habits.find((h) => h.id === habitId);
+		if (!habit) return;
+		
 		const isStamped = getTodayStamp(habitId);
 		
-		// Send request to server
-		const response = await fetch('/api/stamp', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				habitId,
-				date: today,
-				value: isStamped ? 0 : 1
-			})
-		});
-
-		if (response.ok) {
-			// Optimistic update - create new array to trigger reactivity
+		// For weekly/monthly habits, when unchecking, we need to clear all stamps in the period
+		if (isStamped && habit.frequency !== 'daily') {
+			// Get all stamp dates in the current period
+			const stampDatesToDelete: string[] = [];
+			
+			if (habit.frequency === 'weekly') {
+				const todayDate = new Date(today + 'T00:00:00');
+				const startOfYear = new Date(todayDate.getFullYear(), 0, 1);
+				const days = Math.floor((todayDate.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+				const currentWeek = Math.floor(days / 7);
+				const currentWeekKey = `${todayDate.getFullYear()}-W${currentWeek}`;
+				
+				habit.stamps.forEach((s) => {
+					const stampDate = new Date(s.date + 'T00:00:00');
+					const stampStartOfYear = new Date(stampDate.getFullYear(), 0, 1);
+					const stampDays = Math.floor((stampDate.getTime() - stampStartOfYear.getTime()) / (24 * 60 * 60 * 1000));
+					const stampWeek = Math.floor(stampDays / 7);
+					const stampWeekKey = `${stampDate.getFullYear()}-W${stampWeek}`;
+					if (stampWeekKey === currentWeekKey && s.value > 0) {
+						stampDatesToDelete.push(s.date);
+					}
+				});
+			} else if (habit.frequency === 'monthly') {
+				const todayDate = new Date(today + 'T00:00:00');
+				const currentMonthKey = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`;
+				
+				habit.stamps.forEach((s) => {
+					const stampDate = new Date(s.date + 'T00:00:00');
+					const stampMonthKey = `${stampDate.getFullYear()}-${String(stampDate.getMonth() + 1).padStart(2, '0')}`;
+					if (stampMonthKey === currentMonthKey && s.value > 0) {
+						stampDatesToDelete.push(s.date);
+					}
+				});
+			}
+			
+			// Delete all stamps in the period
+			for (const dateToDelete of stampDatesToDelete) {
+				await fetch('/api/stamp', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						habitId,
+						date: dateToDelete,
+						value: 0
+					})
+				});
+			}
+			
+			// Update local state
 			habits = habits.map((h) => {
 				if (h.id === habitId) {
-					const existingStamp = h.stamps.find((s) => s.date === today);
-					if (existingStamp) {
-						// Update existing stamp
-						return {
-							...h,
-							stamps: h.stamps.map((s) =>
-								s.date === today ? { ...s, value: isStamped ? 0 : 1 } : s
-							),
-							currentStreak: isStamped ? Math.max(0, h.currentStreak - 1) : h.currentStreak + 1
-						};
-					} else {
-						// Add new stamp
-						return {
-							...h,
-							stamps: [...h.stamps, { date: today, value: 1 }],
-							currentStreak: h.currentStreak + 1
-						};
-					}
+					return {
+						...h,
+						stamps: h.stamps.filter((s) => !stampDatesToDelete.includes(s.date))
+					};
 				}
 				return h;
 			});
+			
+			// Refresh to get updated streak
+			await invalidateAll();
+		} else {
+			// For daily habits or when checking weekly/monthly habits, use today's date
+			const response = await fetch('/api/stamp', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					habitId,
+					date: today,
+					value: isStamped ? 0 : 1
+				})
+			});
 
-			// Recalculate aggregated data
-			aggregatedData = recalculateAggregatedData();
+			if (response.ok) {
+				// Optimistic update - create new array to trigger reactivity
+				habits = habits.map((h) => {
+					if (h.id === habitId) {
+						const existingStamp = h.stamps.find((s) => s.date === today);
+						if (existingStamp) {
+							// Update existing stamp
+							return {
+								...h,
+								stamps: h.stamps.map((s) =>
+									s.date === today ? { ...s, value: isStamped ? 0 : 1 } : s
+								),
+								currentStreak: isStamped ? Math.max(0, h.currentStreak - 1) : h.currentStreak + 1
+							};
+						} else {
+							// Add new stamp
+							return {
+								...h,
+								stamps: [...h.stamps, { date: today, value: 1 }],
+								currentStreak: h.currentStreak + 1
+							};
+						}
+					}
+					return h;
+				});
+
+				// Recalculate aggregated data
+				aggregatedData = recalculateAggregatedData();
+			}
 		}
 	}
 
