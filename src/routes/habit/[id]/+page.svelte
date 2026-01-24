@@ -2,10 +2,17 @@
 	import CalendarGrid from '$lib/components/CalendarGrid.svelte';
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
 	import Icon from '@iconify/svelte';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { themeStore } from '$lib/stores/theme.svelte';
+	import { useAutoRefetch } from '$lib/swr.svelte';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
+
+	// Set up automatic data refresh on focus/reconnect
+	onMount(() => {
+		return useAutoRefetch();
+	});
 
 	let showDeleteConfirm = $state(false);
 	let showEditForm = $state(false);
@@ -158,8 +165,8 @@
 			habitColor = editColor;
 			habitFrequency = editFrequency;
 			showEditForm = false;
-			// Reload page to recalculate streak with new frequency
-			window.location.reload();
+			// Refresh data to recalculate streak with new frequency
+			await invalidateAll();
 		}
 	}
 

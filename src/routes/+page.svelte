@@ -4,8 +4,16 @@
 	import ColorPicker from '$lib/components/ColorPicker.svelte';
 	import Icon from '@iconify/svelte';
 	import { themeStore } from '$lib/stores/theme.svelte';
+	import { useAutoRefetch } from '$lib/swr.svelte';
+	import { invalidateAll } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
+
+	// Set up automatic data refresh on focus/reconnect
+	onMount(() => {
+		return useAutoRefetch();
+	});
 
 	// Create reactive values from server data
 	let habits = $derived(data.habits);
@@ -231,8 +239,8 @@
 						newHabitName = '';
 						newHabitColor = '#22C55E';
 						newHabitFrequency = 'daily';
-						// Reload page to get new habit
-						window.location.reload();
+						// Refresh data to get new habit
+						await invalidateAll();
 					}
 				}}
 			>
