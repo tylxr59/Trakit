@@ -5,20 +5,23 @@
 	interface Props {
 		data: Array<{ date: string | Date; value: number }>;
 		color?: string;
-		colorMap?: {
-			level0: string;
-			level1: string;
-			level2: string;
-			level3: string;
-			level4: string;
-		};
+		usePercentageColors?: boolean;
 	}
 
 	let {
 		data,
 		color = '#4caf50',
-		colorMap
+		usePercentageColors = false
 	}: Props = $props();
+
+	// Generate color map for percentage-based coloring (aggregated view)
+	const colorMap = $derived(usePercentageColors ? {
+		level0: themeStore.value === 'dark' ? 'rgb(30 30 35)' : 'rgb(232 228 240)',
+		level1: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.3)' : 'rgb(103 80 164 / 0.2)',
+		level2: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.5)' : 'rgb(103 80 164 / 0.4)',
+		level3: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.75)' : 'rgb(103 80 164 / 0.65)',
+		level4: themeStore.value === 'dark' ? 'rgb(208 188 255)' : 'rgb(103 80 164)'
+	} : null);
 
 	let containerElement: HTMLElement;
 
@@ -117,7 +120,7 @@
 	});
 
 	function getColor(value: number): string {
-		const emptyColor = themeStore.value === 'dark' ? '#161b22' : '#ebedf0';
+		const emptyColor = themeStore.value === 'dark' ? '#161b22' : '#e8e4f0';
 
 		// If colorMap is provided, use it
 		if (colorMap) {

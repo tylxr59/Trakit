@@ -2,9 +2,8 @@
 	import { page } from '$app/stores';
 	import Icon from '@iconify/svelte';
 
-	// Error status and message from SvelteKit
+	// Error status from SvelteKit
 	const status = $derived($page.status);
-	const message = $derived($page.error?.message || 'An unexpected error occurred');
 
 	// Map error codes to user-friendly information
 	const errorInfo = $derived.by(() => {

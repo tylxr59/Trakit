@@ -271,9 +271,9 @@
 		});
 	}
 
-	// Theme-aware color map for aggregated view
-	const colorMap = $derived({
-		level0: themeStore.value === 'dark' ? 'rgb(30 30 35)' : 'rgb(235 237 240)',
+	// Color map for legend display (matches CalendarGrid internal colors)
+	const legendColors = $derived({
+		level0: themeStore.value === 'dark' ? 'rgb(30 30 35)' : 'rgb(232 228 240)',
 		level1: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.3)' : 'rgb(103 80 164 / 0.2)',
 		level2: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.5)' : 'rgb(103 80 164 / 0.4)',
 		level3: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.75)' : 'rgb(103 80 164 / 0.65)',
@@ -368,15 +368,15 @@
 		<!-- Aggregated Calendar Grid -->
 		<div class="aggregated-calendar">
 			<h2 class="section-title">Activity Overview</h2>
-			<CalendarGrid data={aggregatedData} {colorMap} />
+			<CalendarGrid data={aggregatedData} usePercentageColors={true} />
 			<div class="legend">
 				<span class="legend-label">Less</span>
 				<div class="legend-colors">
-					<div class="legend-box" style="background-color: {colorMap.level0}"></div>
-					<div class="legend-box" style="background-color: {colorMap.level1}"></div>
-					<div class="legend-box" style="background-color: {colorMap.level2}"></div>
-					<div class="legend-box" style="background-color: {colorMap.level3}"></div>
-					<div class="legend-box" style="background-color: {colorMap.level4}"></div>
+					<div class="legend-box" style="background-color: {legendColors.level0}"></div>
+					<div class="legend-box" style="background-color: {legendColors.level1}"></div>
+					<div class="legend-box" style="background-color: {legendColors.level2}"></div>
+					<div class="legend-box" style="background-color: {legendColors.level3}"></div>
+					<div class="legend-box" style="background-color: {legendColors.level4}"></div>
 				</div>
 				<span class="legend-label">More</span>
 			</div>

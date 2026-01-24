@@ -77,14 +77,6 @@
 		}
 	});
 
-	const colorMap = $derived({
-		level0: themeStore.value === 'dark' ? 'rgb(30 30 35)' : 'rgb(235 237 240)',
-		level1: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.3)' : 'rgb(103 80 164 / 0.2)',
-		level2: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.5)' : 'rgb(103 80 164 / 0.4)',
-		level3: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.7)' : 'rgb(103 80 164 / 0.6)',
-		level4: themeStore.value === 'dark' ? 'rgb(103 80 164 / 0.9)' : 'rgb(103 80 164 / 0.8)'
-	});
-
 	function formatDate(date: Date): string {
 		return date.toLocaleDateString('en-US', {
 			year: 'numeric',
@@ -290,7 +282,7 @@
 	<div class="calendar-section">
 		<h2 class="section-title">Activity History</h2>
 		<div class="calendar-container">
-			<CalendarGrid data={stamps} color={habitColor} {colorMap} />
+			<CalendarGrid data={stamps} color={habitColor} />
 		</div>
 	</div>
 	</div>
