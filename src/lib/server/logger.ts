@@ -1,6 +1,6 @@
 /**
- * Security event logging utility
- * Logs important security events for monitoring and auditing
+ * Logging utility for security events and general application logging
+ * In production, this should write to a proper logging system
  */
 
 type SecurityEventType =
@@ -58,3 +58,27 @@ export function createSecurityEvent(
 		...additionalData
 	};
 }
+
+/**
+ * General application logger
+ * In production, replace with a proper logging library like Winston or Pino
+ */
+export const logger = {
+	info(message: string, data?: Record<string, unknown>): void {
+		console.log('[INFO]', message, data ? JSON.stringify(data) : '');
+	},
+
+	warn(message: string, data?: Record<string, unknown>): void {
+		console.warn('[WARN]', message, data ? JSON.stringify(data) : '');
+	},
+
+	error(message: string, data?: Record<string, unknown>): void {
+		console.error('[ERROR]', message, data ? JSON.stringify(data) : '');
+	},
+
+	debug(message: string, data?: Record<string, unknown>): void {
+		if (process.env.NODE_ENV === 'development') {
+			console.debug('[DEBUG]', message, data ? JSON.stringify(data) : '');
+		}
+	}
+};

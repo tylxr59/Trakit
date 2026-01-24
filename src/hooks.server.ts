@@ -6,7 +6,8 @@ import {
 	getSessionCookieName,
 	setCSRFCookie
 } from '$lib/server/sessions';
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
+import { logger } from '$lib/server/logger';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const sessionToken = event.cookies.get(getSessionCookieName());
@@ -33,4 +34,34 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.user = user;
 	event.locals.session = session;
 	return resolve(event);
+};
+
+export const handleError: HandleServerError = ({ error, event, status, message }) => {
+	// Log the error with context
+	const errorId = crypto.randomUUID();
+
+	logger.error('Server error occurred', {
+		errorId,
+		status,
+		message,
+		path: event.url.pathname,
+		method: event.request.method,
+		userId: event.locals.user?.id,
+		error:
+			error instanceof Error
+				? {
+						name: error.name,
+						message: error.message,
+						stack: error.stack
+					}
+				: error
+	});
+
+	// Don't expose internal error details to the client in production
+	const isDev = process.env.NODE_ENV === 'development';
+
+	return {
+		message: isDev ? message : 'An unexpected error occurred',
+		errorId: isDev ? errorId : undefined
+	};
 };

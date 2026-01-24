@@ -10,6 +10,9 @@ pnpm-lock.yaml
 package-lock.json
 yarn.lock
 
+# AI agent documentation - frequently updated by AI, ignore formatting
+AGENTS.md
+
 # Temporarily ignore Svelte files due to prettier-plugin-svelte compatibility issue with Svelte 5
 # eslint-plugin-svelte handles Svelte formatting validation instead
 # Issue: getVisitorKeys error with Prettier 3.3.3 + prettier-plugin-svelte 3.3.2
