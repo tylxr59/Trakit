@@ -91,6 +91,12 @@ while true; do
             sleep 5
             
             echo ""
+            echo "🔄 Running database migrations..."
+            docker compose exec -T app npm run migrate:up || {
+                echo "⚠️  Warning: Migration command failed or no migrations to run"
+            }
+            
+            echo ""
             echo "✅ Update complete!"
             echo ""
             read -p "Press Enter to continue..."
