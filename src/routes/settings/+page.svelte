@@ -103,11 +103,25 @@
 				<small>Used to accurately display when you completed habits</small>
 			</div>
 
-			<button type="submit" class="submit-btn">
-				<Icon icon="material-symbols:save" />
-				Save Profile
-			</button>
-		</form>
+		<div class="form-group">
+			<label for="weekStart">Week Starts On</label>
+			<select id="weekStart" name="weekStart" class="form-input" required>
+				<option value="sunday" selected={(data as unknown as { weekStart: string }).weekStart === 'sunday'}>Sunday</option>
+				<option value="monday" selected={(data as unknown as { weekStart: string }).weekStart === 'monday'}>Monday</option>
+				<option value="tuesday" selected={(data as unknown as { weekStart: string }).weekStart === 'tuesday'}>Tuesday</option>
+				<option value="wednesday" selected={(data as unknown as { weekStart: string }).weekStart === 'wednesday'}>Wednesday</option>
+				<option value="thursday" selected={(data as unknown as { weekStart: string }).weekStart === 'thursday'}>Thursday</option>
+				<option value="friday" selected={(data as unknown as { weekStart: string }).weekStart === 'friday'}>Friday</option>
+				<option value="saturday" selected={(data as unknown as { weekStart: string }).weekStart === 'saturday'}>Saturday</option>
+			</select>
+			<small>Affects weekly habit tracking and calendar display</small>
+		</div>
+
+		<button type="submit" class="submit-btn">
+			<Icon icon="material-symbols:save" />
+			Save Profile
+		</button>
+	</form>
 	</section>
 
 	<!-- Email Section -->

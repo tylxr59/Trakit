@@ -6,6 +6,7 @@
 	import { themeStore } from '$lib/stores/theme.svelte';
 	import { useAutoRefetch } from '$lib/swr.svelte';
 	import { onMount } from 'svelte';
+	import { getWeekKey, getMonthKey } from '$lib/dateUtils';
 
 	let { data } = $props();
 
@@ -26,6 +27,12 @@
 	let stamps = $derived(data.stamps);
 	let currentStreak = $derived(data.currentStreak);
 	let isSharing = $state(false);
+	let userTimezone = $derived((data as unknown as { userTimezone: string }).userTimezone || 'UTC');
+	let weekStart = $derived(
+		((data as unknown as {
+			weekStart: 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+		}).weekStart) || 'sunday'
+	);
 	
 	// Sync editable form fields with data
 	$effect(() => {
@@ -53,11 +60,7 @@
 			// Group by week and calculate completion rate
 			const weekMap = new Map();
 			stamps.forEach(stamp => {
-				const date = new Date(stamp.date);
-				const startOfYear = new Date(date.getFullYear(), 0, 1);
-				const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-				const week = Math.floor(days / 7);
-				const weekKey = `${date.getFullYear()}-W${week}`;
+				const weekKey = getWeekKey(stamp.date, userTimezone, weekStart);
 				if (!weekMap.has(weekKey)) weekMap.set(weekKey, false);
 				if (stamp.value > 0) weekMap.set(weekKey, true);
 			});
@@ -67,8 +70,7 @@
 			// Monthly: Group by month and calculate completion rate
 			const monthMap = new Map();
 			stamps.forEach(stamp => {
-				const date = new Date(stamp.date);
-				const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+				const monthKey = getMonthKey(stamp.date, userTimezone);
 				if (!monthMap.has(monthKey)) monthMap.set(monthKey, false);
 				if (stamp.value > 0) monthMap.set(monthKey, true);
 			});
@@ -282,7 +284,7 @@
 	<div class="calendar-section">
 		<h2 class="section-title">Activity History</h2>
 		<div class="calendar-container">
-			<CalendarGrid data={stamps} color={habitColor} />
+			<CalendarGrid data={stamps} color={habitColor} weekStart={weekStart} />
 		</div>
 	</div>
 	</div>

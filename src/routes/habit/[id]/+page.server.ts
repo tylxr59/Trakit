@@ -34,7 +34,12 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	}));
 
 	const userTimezone = locals.user.timezone || 'UTC';
-	const currentStreak = calculateStreak(stamps, habit.frequency || 'daily', userTimezone);
+	const currentStreak = calculateStreak(
+		stamps,
+		habit.frequency || 'daily',
+		userTimezone,
+		locals.user.week_start
+	);
 
 	return {
 		habit: {
@@ -46,6 +51,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		},
 		stamps,
 		currentStreak,
-		userTimezone
+		userTimezone,
+		weekStart: locals.user.week_start
 	};
 };

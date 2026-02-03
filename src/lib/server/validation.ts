@@ -146,3 +146,15 @@ export function validatePassword(password: string): string | null {
 
 	return null;
 }
+
+/**
+ * Validate week start preference
+ */
+export function isValidWeekStart(weekStart: string): boolean {
+	if (!weekStart || typeof weekStart !== 'string') {
+		return false;
+	}
+
+	const validDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+	return validDays.includes(weekStart.toLowerCase());
+}

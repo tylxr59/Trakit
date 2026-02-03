@@ -2,17 +2,31 @@
  * Shared utility functions for habit tracking calculations
  */
 
+import { getWeekKey, getMonthKey } from '$lib/dateUtils';
+
+// Re-export for convenience
+export { getWeekKey, getMonthKey };
+
 /**
  * Calculate current streak for a habit
  * @param stamps Array of habit completion stamps
  * @param frequency Habit frequency: 'daily', 'weekly', or 'monthly'
  * @param timezone User's timezone (IANA timezone string)
+ * @param weekStart Week start preference
  * @returns Current streak count
  */
 export function calculateStreak(
 	stamps: Array<{ date: string; value: number }>,
 	frequency: string = 'daily',
-	timezone: string = 'UTC'
+	timezone: string = 'UTC',
+	weekStart:
+		| 'sunday'
+		| 'monday'
+		| 'tuesday'
+		| 'wednesday'
+		| 'thursday'
+		| 'friday'
+		| 'saturday' = 'sunday'
 ): number {
 	if (stamps.length === 0) return 0;
 
@@ -67,26 +81,20 @@ export function calculateStreak(
 		return streak;
 	} else if (frequency === 'weekly') {
 		// Weekly frequency: count consecutive weeks with at least one completion
-		const getWeekKey = (dateStr: string) => {
-			const date = new Date(dateStr);
-			const startOfYear = new Date(date.getFullYear(), 0, 1);
-			const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-			const week = Math.floor(days / 7);
-			return `${date.getFullYear()}-W${week}`;
-		};
-
-		// Group stamps by week
+		// Group stamps by week using the shared utility
 		const weekMap = new Map<string, boolean>();
 		for (const stamp of sortedStamps) {
 			if (stamp.value > 0) {
-				weekMap.set(getWeekKey(stamp.date), true);
+				weekMap.set(getWeekKey(stamp.date, timezone, weekStart), true);
 			}
 		}
 
-		const currentWeek = getWeekKey(today);
-		const lastWeek = getWeekKey(
-			new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-		);
+		const currentWeek = getWeekKey(today, timezone, weekStart);
+
+		// Get last week by going back 7 days
+		const lastWeekDate = new Date(today + 'T00:00:00');
+		lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+		const lastWeek = getWeekKey(lastWeekDate.toISOString().split('T')[0], timezone, weekStart);
 
 		// Must have completion in current or last week to start streak
 		if (!weekMap.has(currentWeek) && !weekMap.has(lastWeek)) {
@@ -99,7 +107,7 @@ export function calculateStreak(
 		// Count backwards by weeks
 		for (let i = 0; i < 104; i++) {
 			// Check up to 2 years of weeks
-			const weekKey = getWeekKey(checkDate.toISOString().split('T')[0]);
+			const weekKey = getWeekKey(checkDate.toISOString().split('T')[0], timezone, weekStart);
 			if (weekMap.has(weekKey)) {
 				streak++;
 				checkDate.setDate(checkDate.getDate() - 7);
@@ -111,25 +119,20 @@ export function calculateStreak(
 		return streak;
 	} else if (frequency === 'monthly') {
 		// Monthly frequency: count consecutive months with at least one completion
-		const getMonthKey = (dateStr: string) => {
-			const date = new Date(dateStr);
-			return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-		};
-
-		// Group stamps by month
+		// Group stamps by month using the shared utility
 		const monthMap = new Map<string, boolean>();
 		for (const stamp of sortedStamps) {
 			if (stamp.value > 0) {
-				monthMap.set(getMonthKey(stamp.date), true);
+				monthMap.set(getMonthKey(stamp.date, timezone), true);
 			}
 		}
 
-		const currentMonth = getMonthKey(today);
-		const lastMonth = (() => {
-			const date = new Date(today + 'T00:00:00');
-			date.setMonth(date.getMonth() - 1);
-			return getMonthKey(date.toISOString().split('T')[0]);
-		})();
+		const currentMonth = getMonthKey(today, timezone);
+
+		// Get last month
+		const lastMonthDate = new Date(today + 'T00:00:00');
+		lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+		const lastMonth = getMonthKey(lastMonthDate.toISOString().split('T')[0], timezone);
 
 		// Must have completion in current or last month to start streak
 		if (!monthMap.has(currentMonth) && !monthMap.has(lastMonth)) {
@@ -142,7 +145,7 @@ export function calculateStreak(
 		// Count backwards by months
 		for (let i = 0; i < 24; i++) {
 			// Check up to 2 years of months
-			const monthKey = getMonthKey(checkDate.toISOString().split('T')[0]);
+			const monthKey = getMonthKey(checkDate.toISOString().split('T')[0], timezone);
 			if (monthMap.has(monthKey)) {
 				streak++;
 				checkDate.setMonth(checkDate.getMonth() - 1);

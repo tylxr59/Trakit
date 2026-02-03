@@ -7,6 +7,7 @@
 	import { useAutoRefetch } from '$lib/swr.svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { getWeekKey, getMonthKey } from '$lib/dateUtils';
 
 	let { data } = $props();
 
@@ -19,6 +20,11 @@
 	let habits = $derived(data.habits);
 	let aggregatedData = $derived(data.aggregatedData);
 	let userTimezone = $derived(data.userTimezone || 'UTC');
+	let weekStart = $derived(
+		((data as unknown as {
+			weekStart: 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+		}).weekStart) || 'sunday'
+	);
 
 	let showAddForm = $state(false);
 	let showColorPicker = $state(false);
@@ -49,30 +55,20 @@
 		
 		// For weekly habits, check if there's any stamp in the current week
 		if (habit.frequency === 'weekly') {
-			const todayDate = new Date(today + 'T00:00:00');
-			const startOfYear = new Date(todayDate.getFullYear(), 0, 1);
-			const days = Math.floor((todayDate.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-			const currentWeek = Math.floor(days / 7);
-			const currentWeekKey = `${todayDate.getFullYear()}-W${currentWeek}`;
+			const currentWeekKey = getWeekKey(today, userTimezone, weekStart);
 			
 			return habit.stamps.some((s) => {
-				const stampDate = new Date(s.date + 'T00:00:00');
-				const stampStartOfYear = new Date(stampDate.getFullYear(), 0, 1);
-				const stampDays = Math.floor((stampDate.getTime() - stampStartOfYear.getTime()) / (24 * 60 * 60 * 1000));
-				const stampWeek = Math.floor(stampDays / 7);
-				const stampWeekKey = `${stampDate.getFullYear()}-W${stampWeek}`;
+				const stampWeekKey = getWeekKey(s.date, userTimezone, weekStart);
 				return stampWeekKey === currentWeekKey && s.value > 0;
 			});
 		}
 		
 		// For monthly habits, check if there's any stamp in the current month
 		if (habit.frequency === 'monthly') {
-			const todayDate = new Date(today + 'T00:00:00');
-			const currentMonthKey = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`;
+			const currentMonthKey = getMonthKey(today, userTimezone);
 			
 			return habit.stamps.some((s) => {
-				const stampDate = new Date(s.date + 'T00:00:00');
-				const stampMonthKey = `${stampDate.getFullYear()}-${String(stampDate.getMonth() + 1).padStart(2, '0')}`;
+				const stampMonthKey = getMonthKey(s.date, userTimezone);
 				return stampMonthKey === currentMonthKey && s.value > 0;
 			});
 		}
@@ -92,29 +88,19 @@
 			const stampDatesToDelete: string[] = [];
 			
 			if (habit.frequency === 'weekly') {
-				const todayDate = new Date(today + 'T00:00:00');
-				const startOfYear = new Date(todayDate.getFullYear(), 0, 1);
-				const days = Math.floor((todayDate.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-				const currentWeek = Math.floor(days / 7);
-				const currentWeekKey = `${todayDate.getFullYear()}-W${currentWeek}`;
+				const currentWeekKey = getWeekKey(today, userTimezone, weekStart);
 				
 				habit.stamps.forEach((s) => {
-					const stampDate = new Date(s.date + 'T00:00:00');
-					const stampStartOfYear = new Date(stampDate.getFullYear(), 0, 1);
-					const stampDays = Math.floor((stampDate.getTime() - stampStartOfYear.getTime()) / (24 * 60 * 60 * 1000));
-					const stampWeek = Math.floor(stampDays / 7);
-					const stampWeekKey = `${stampDate.getFullYear()}-W${stampWeek}`;
+					const stampWeekKey = getWeekKey(s.date, userTimezone, weekStart);
 					if (stampWeekKey === currentWeekKey && s.value > 0) {
 						stampDatesToDelete.push(s.date);
 					}
 				});
 			} else if (habit.frequency === 'monthly') {
-				const todayDate = new Date(today + 'T00:00:00');
-				const currentMonthKey = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}`;
+				const currentMonthKey = getMonthKey(today, userTimezone);
 				
 				habit.stamps.forEach((s) => {
-					const stampDate = new Date(s.date + 'T00:00:00');
-					const stampMonthKey = `${stampDate.getFullYear()}-${String(stampDate.getMonth() + 1).padStart(2, '0')}`;
+					const stampMonthKey = getMonthKey(s.date, userTimezone);
 					if (stampMonthKey === currentMonthKey && s.value > 0) {
 						stampDatesToDelete.push(s.date);
 					}
@@ -368,7 +354,7 @@
 		<!-- Aggregated Calendar Grid -->
 		<div class="aggregated-calendar">
 			<h2 class="section-title">Activity Overview</h2>
-			<CalendarGrid data={aggregatedData} usePercentageColors={true} />
+			<CalendarGrid data={aggregatedData} usePercentageColors={true} weekStart={weekStart} />
 			<div class="legend">
 				<span class="legend-label">Less</span>
 				<div class="legend-colors">

@@ -6,12 +6,14 @@
 		data: Array<{ date: string | Date; value: number }>;
 		color?: string;
 		usePercentageColors?: boolean;
+		weekStart?: 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
 	}
 
 	let {
 		data,
 		color = '#4caf50',
-		usePercentageColors = false
+		usePercentageColors = false,
+		weekStart = 'sunday'
 	}: Props = $props();
 
 	// Generate color map for percentage-based coloring (aggregated view)
@@ -37,9 +39,22 @@
 		const today = new Date();
 		// Use local date to avoid timezone issues
 		const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-		// Go back to the most recent Sunday
+		
+		// Go back to the start of the week based on weekStart preference
 		const dayOfWeek = startDate.getDay();
-		startDate.setDate(startDate.getDate() - dayOfWeek);
+		const dayMap: Record<string, number> = {
+			sunday: 0,
+			monday: 1,
+			tuesday: 2,
+			wednesday: 3,
+			thursday: 4,
+			friday: 5,
+			saturday: 6
+		};
+		const weekStartDay = dayMap[weekStart];
+		const offset = (dayOfWeek - weekStartDay + 7) % 7;
+		startDate.setDate(startDate.getDate() - offset);
+		
 		// Then go back 25 more weeks (26 weeks total)
 		startDate.setDate(startDate.getDate() - 175);
 

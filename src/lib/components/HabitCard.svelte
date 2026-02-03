@@ -14,9 +14,10 @@
 		todayStamped: boolean;
 		onToggleToday: () => void;
 		onDelete: () => void;
+		weekStart?: 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
 	}
 
-	let { habit, stamps, todayStamped, onToggleToday, onDelete }: Props = $props();
+	let { habit, stamps, todayStamped, onToggleToday, onDelete, weekStart = 'sunday' }: Props = $props();
 </script>
 
 <div class="habit-card">
@@ -40,7 +41,7 @@
 		</div>
 	</div>
 	<div class="calendar">
-		<CalendarGrid data={stamps} color={habit.color} />
+		<CalendarGrid data={stamps} color={habit.color} weekStart={weekStart} />
 	</div>
 </div>
 

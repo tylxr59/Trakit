@@ -1,7 +1,7 @@
 import { redirect, fail } from '@sveltejs/kit';
 import { pool } from '$lib/server/db';
 import { hash, verify } from '@node-rs/argon2';
-import { isValidEmail, validatePassword } from '$lib/server/validation';
+import { isValidEmail, validatePassword, isValidWeekStart } from '$lib/server/validation';
 import { invalidateUserSessions } from '$lib/server/sessions';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -11,9 +11,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	// Get full user data
-	const result = await pool.query('SELECT email, display_name, timezone FROM users WHERE id = $1', [
-		locals.user.id
-	]);
+	const result = await pool.query(
+		'SELECT email, display_name, timezone, week_start FROM users WHERE id = $1',
+		[locals.user.id]
+	);
 
 	if (result.rows.length === 0) {
 		throw redirect(302, '/login');
@@ -24,7 +25,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		email: user.email,
 		displayName: user.display_name || '',
-		timezone: user.timezone || 'UTC'
+		timezone: user.timezone || 'UTC',
+		weekStart: user.week_start || 'sunday'
 	};
 };
 
@@ -37,6 +39,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const displayName = formData.get('displayName') as string;
 		const timezone = formData.get('timezone') as string;
+		const weekStart = formData.get('weekStart') as string;
 
 		if (!displayName || displayName.length < 1 || displayName.length > 100) {
 			return fail(400, { message: 'Display name must be between 1 and 100 characters' });
@@ -46,12 +49,15 @@ export const actions: Actions = {
 			return fail(400, { message: 'Timezone is required' });
 		}
 
+		if (!isValidWeekStart(weekStart)) {
+			return fail(400, { message: 'Invalid week start value' });
+		}
+
 		try {
-			await pool.query('UPDATE users SET display_name = $1, timezone = $2 WHERE id = $3', [
-				displayName,
-				timezone,
-				locals.user.id
-			]);
+			await pool.query(
+				'UPDATE users SET display_name = $1, timezone = $2, week_start = $3 WHERE id = $4',
+				[displayName, timezone, weekStart, locals.user.id]
+			);
 
 			return { success: true, message: 'Profile updated successfully' };
 		} catch (error) {

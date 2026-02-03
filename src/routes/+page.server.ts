@@ -48,7 +48,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		frequency: h.frequency || 'daily',
 		createdAt: h.created_at,
 		stamps: stampsByHabit[h.id] || [],
-		currentStreak: calculateStreak(stampsByHabit[h.id] || [], h.frequency || 'daily', userTimezone)
+		currentStreak: calculateStreak(
+			stampsByHabit[h.id] || [],
+			h.frequency || 'daily',
+			userTimezone,
+			locals.user?.week_start || 'sunday'
+		)
 	}));
 
 	// Calculate aggregated calendar data
@@ -57,7 +62,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		habits,
 		aggregatedData,
-		userTimezone
+		userTimezone,
+		weekStart: locals.user?.week_start || 'sunday'
 	};
 };
 

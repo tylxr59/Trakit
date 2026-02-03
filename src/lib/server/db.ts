@@ -14,6 +14,7 @@ export interface User {
 	password_hash: string;
 	display_name: string | null;
 	timezone: string | null;
+	week_start: 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
 	created_at: Date;
 }
 

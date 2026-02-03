@@ -10,6 +10,14 @@ declare global {
 				emailVerified: boolean;
 				displayName: string | null;
 				timezone: string | null;
+				week_start:
+					| 'sunday'
+					| 'monday'
+					| 'tuesday'
+					| 'wednesday'
+					| 'thursday'
+					| 'friday'
+					| 'saturday';
 			} | null;
 			session: {
 				id: string;
