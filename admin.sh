@@ -41,9 +41,10 @@ while true; do
     echo "  5) Habit Statistics"
     echo "  6) Delete User (by email)"
     echo "  7) View Logs"
-    echo "  8) Exit"
+    echo "  8) Set Autostart (Docker)"
+    echo "  9) Exit"
     echo ""
-    read -p "Enter option (1-8): " choice
+    read -p "Enter option (1-9): " choice
 
     case $choice in
         1)
@@ -208,6 +209,55 @@ while true; do
             ;;
             
         8)
+            echo ""
+            echo "🔄 Docker Autostart Configuration"
+            echo "=================================="
+            echo ""
+            
+            # Get current restart policy for app container
+            CURRENT_POLICY=$(docker inspect trakit-app-1 --format='{{.HostConfig.RestartPolicy.Name}}' 2>/dev/null || echo "unknown")
+            
+            if [ "$CURRENT_POLICY" = "unknown" ]; then
+                echo "⚠️  Warning: Containers may not be running. Start services first (option 1)."
+                echo ""
+                read -p "Press Enter to continue..."
+                continue
+            fi
+            
+            echo "Current autostart status:"
+            if [ "$CURRENT_POLICY" = "unless-stopped" ] || [ "$CURRENT_POLICY" = "always" ]; then
+                echo "  ✅ ENABLED - Containers will start automatically on system boot"
+                echo ""
+                read -p "Do you want to DISABLE autostart? (yes/no): " confirm
+                
+                if [ "$confirm" = "yes" ]; then
+                    echo ""
+                    echo "Disabling autostart for all containers..."
+                    for container in $(docker compose ps -q); do
+                        docker update --restart=no $container >/dev/null 2>&1
+                    done
+                    echo "✅ Autostart disabled. Containers will not start on system boot."
+                fi
+            else
+                echo "  ❌ DISABLED - Containers will NOT start automatically on system boot"
+                echo ""
+                read -p "Do you want to ENABLE autostart? (yes/no): " confirm
+                
+                if [ "$confirm" = "yes" ]; then
+                    echo ""
+                    echo "Enabling autostart for all containers..."
+                    for container in $(docker compose ps -q); do
+                        docker update --restart=unless-stopped $container >/dev/null 2>&1
+                    done
+                    echo "✅ Autostart enabled. Containers will start automatically on system boot."
+                fi
+            fi
+            
+            echo ""
+            read -p "Press Enter to continue..."
+            ;;
+            
+        9)
             echo ""
             echo "Goodbye!"
             exit 0
