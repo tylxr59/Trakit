@@ -27,6 +27,9 @@
 	--color-on-surface-variant: 73 69 79;
 	--color-outline: 121 116 126;
 	--color-outline-variant: 202 196 208;
+
+	/* Icon adjustments for light mode */
+	--icon-invert: 0;
 }
 
 :root.dark {
@@ -55,6 +58,9 @@
 	--color-on-surface-variant: 202 196 208;
 	--color-outline: 147 143 153;
 	--color-outline-variant: 73 69 79;
+
+	/* Icon adjustments for dark mode */
+	--icon-invert: 1;
 }
 
 @layer base {

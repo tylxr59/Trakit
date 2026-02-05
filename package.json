@@ -15,7 +15,8 @@
 		"test:watch": "vitest",
 		"migrate:up": "dotenv -e .env -- node-pg-migrate up",
 		"migrate:down": "dotenv -e .env -- node-pg-migrate down",
-		"migrate:create": "dotenv -e .env -- node-pg-migrate create"
+		"migrate:create": "dotenv -e .env -- node-pg-migrate create",
+		"generate:notification-keys": "node scripts/generate-notification-keys.mjs"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.18.0",
@@ -25,9 +26,12 @@
 		"@sveltejs/kit": "^2.14.0",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@tailwindcss/postcss": "^4.1.18",
+		"@types/luxon": "^3.7.1",
 		"@types/node": "^25.0.10",
+		"@types/node-cron": "^3.0.11",
 		"@types/nodemailer": "^7.0.5",
 		"@types/pg": "^8.11.10",
+		"@types/web-push": "^3.6.4",
 		"@typescript-eslint/eslint-plugin": "^8.20.0",
 		"@typescript-eslint/parser": "^8.20.0",
 		"autoprefixer": "^10.4.20",
@@ -54,9 +58,12 @@
 		"@oslojs/encoding": "^1.1.0",
 		"dotenv-cli": "^11.0.0",
 		"html2canvas": "^1.4.1",
+		"luxon": "^3.7.2",
+		"node-cron": "^4.2.1",
 		"node-pg-migrate": "^8.0.4",
 		"nodemailer": "^7.0.12",
-		"pg": "^8.13.1"
+		"pg": "^8.13.1",
+		"web-push": "^3.6.7"
 	},
 	"overrides": {
 		"cookie": "^0.7.2",

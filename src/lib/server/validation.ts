@@ -158,3 +158,105 @@ export function isValidWeekStart(weekStart: string): boolean {
 	const validDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 	return validDays.includes(weekStart.toLowerCase());
 }
+
+/**
+ * Validate time format (HH:MM)
+ */
+export function isValidTimeFormat(time: string): boolean {
+	if (!time || typeof time !== 'string') {
+		return false;
+	}
+
+	const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+	return timeRegex.test(time);
+}
+
+/**
+ * Validate reminder service type
+ */
+export function isValidReminderService(service: string): boolean {
+	if (!service || typeof service !== 'string') {
+		return false;
+	}
+
+	return service === 'push' || service === 'ntfy';
+}
+
+/**
+ * Validate and sanitize Ntfy URL
+ * Accepts formats:
+ * - https://ntfy.sh/topic
+ * - https://user:pass@ntfy.example.com/topic
+ * - http://192.168.1.100:8080/topic (for local instances)
+ */
+export function validateNtfyUrl(url: string): {
+	valid: boolean;
+	sanitized?: string;
+	error?: string;
+} {
+	if (!url || typeof url !== 'string') {
+		return { valid: false, error: 'Ntfy URL is required' };
+	}
+
+	const trimmed = url.trim();
+
+	if (trimmed.length === 0) {
+		return { valid: false, error: 'Ntfy URL cannot be empty' };
+	}
+
+	if (trimmed.length > 500) {
+		return { valid: false, error: 'Ntfy URL is too long' };
+	}
+
+	// Basic URL validation
+	try {
+		const parsedUrl = new URL(trimmed);
+
+		// Must be HTTP or HTTPS
+		if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+			return { valid: false, error: 'Ntfy URL must use HTTP or HTTPS protocol' };
+		}
+
+		// Must have a pathname (topic)
+		if (!parsedUrl.pathname || parsedUrl.pathname === '/') {
+			return { valid: false, error: 'Ntfy URL must include a topic path' };
+		}
+
+		return { valid: true, sanitized: trimmed };
+	} catch {
+		return { valid: false, error: 'Invalid Ntfy URL format' };
+	}
+}
+
+/**
+ * Validate push subscription object
+ */
+export function isValidPushSubscription(subscription: unknown): boolean {
+	if (!subscription || typeof subscription !== 'object') {
+		return false;
+	}
+
+	const sub = subscription as Record<string, unknown>;
+
+	// Must have endpoint and keys
+	if (!sub.endpoint || typeof sub.endpoint !== 'string') {
+		return false;
+	}
+
+	if (!sub.keys || typeof sub.keys !== 'object') {
+		return false;
+	}
+
+	const keys = sub.keys as Record<string, unknown>;
+
+	// Must have p256dh and auth keys
+	if (!keys.p256dh || typeof keys.p256dh !== 'string') {
+		return false;
+	}
+
+	if (!keys.auth || typeof keys.auth !== 'string') {
+		return false;
+	}
+
+	return true;
+}

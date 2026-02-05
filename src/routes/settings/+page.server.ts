@@ -3,6 +3,7 @@ import { pool } from '$lib/server/db';
 import { hash, verify } from '@node-rs/argon2';
 import { isValidEmail, validatePassword, isValidWeekStart } from '$lib/server/validation';
 import { invalidateUserSessions } from '$lib/server/sessions';
+import { env } from '$env/dynamic/private';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -10,9 +11,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, '/login');
 	}
 
-	// Get full user data
+	// Get full user data including notification preferences
 	const result = await pool.query(
-		'SELECT email, display_name, timezone, week_start FROM users WHERE id = $1',
+		`SELECT 
+			email, 
+			display_name, 
+			timezone, 
+			week_start,
+			reminder_enabled,
+			reminder_service,
+			reminder_time
+		FROM users 
+		WHERE id = $1`,
 		[locals.user.id]
 	);
 
@@ -26,7 +36,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		email: user.email,
 		displayName: user.display_name || '',
 		timezone: user.timezone || 'UTC',
-		weekStart: user.week_start || 'sunday'
+		weekStart: user.week_start || 'sunday',
+		reminderEnabled: user.reminder_enabled || false,
+		reminderService: user.reminder_service || null,
+		reminderTime: user.reminder_time || '17:00',
+		vapidPublicKey: env.VAPID_PUBLIC_KEY || ''
 	};
 };
 

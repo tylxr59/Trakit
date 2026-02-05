@@ -35,7 +35,7 @@ migrations/                # Database schema migrations
 
 ### Database Schema
 
-- **users**: email, password_hash (Argon2), timezone, email_verified
+- **users**: email, password_hash (Argon2), timezone, email_verified, reminder_enabled, reminder_service, reminder_time, ntfy_url_encrypted, push_subscription
 - **sessions**: id (SHA-256 hash), user_id, expires_at, csrf_token
 - **habits**: name, color, frequency (daily/weekly/monthly), sort_order
 - **habit_stamps**: habit_id, day (date), value (0 or 1)
@@ -62,6 +62,20 @@ migrations/                # Database schema migrations
   - Weekly: consecutive weeks with ≥1 completion
   - Monthly: consecutive months with ≥1 completion
 - **Calendar**: GitHub-style heat map (26 weeks, 182 days) in `CalendarGrid.svelte`
+
+### Notification System
+
+- **Scheduler**: Runs every minute via node-cron in `src/lib/server/scheduler.ts`
+  - Checks users with reminders enabled
+  - Sends notifications at user's configured time in their timezone
+  - Creates motivational messages listing incomplete habits
+- **Services**:
+  - **Push Notifications**: Web Push API with VAPID keys
+  - **Ntfy**: Self-hosted service with encrypted credentials (AES-256-GCM)
+- **Encryption**: Ntfy URLs encrypted in `src/lib/server/encryption.ts`
+- **API**: `/api/notifications/subscribe`, `/api/notifications/preferences`, `/api/notifications/test`
+- **Setup**: Run `npm run generate:notification-keys` to create VAPID and encryption keys
+- **Docs**: See [NOTIFICATIONS.md](NOTIFICATIONS.md) for full documentation
 
 ## Common Tasks
 
@@ -95,6 +109,20 @@ npm test                 # Run Vitest tests
 ```
 
 **After any change, run check, lint, format (if needed), and test, in that order**
+
+## Project Management
+
+### TODO.md Tracking
+
+The project uses `TODO.md` at the root to track implementation progress, technical debt, and deferred decisions. **All agents should maintain this file** when making changes:
+
+- **Add technical debt** introduced by quick fixes or MVP implementations
+- **Document implementation choices** that future developers should know
+- **Track deferred features** that were considered but not implemented
+- **Note production considerations** if scale limitations exist
+- **Update progress** on active development tasks
+
+When you defer a decision, take a shortcut for speed, or implement something that will need improvement later, document it in TODO.md so future agents (and humans) can find and address it.
 
 ## Important Patterns
 

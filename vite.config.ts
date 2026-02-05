@@ -8,6 +8,10 @@ export default defineConfig({
 		VitePWA({
 			registerType: 'autoUpdate',
 			manifest: false, // We're using our own manifest.webmanifest
+			injectRegister: 'auto',
+			strategies: 'injectManifest',
+			srcDir: 'src',
+			filename: 'service-worker.ts',
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
 				runtimeCaching: [

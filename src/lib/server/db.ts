@@ -15,6 +15,12 @@ export interface User {
 	display_name: string | null;
 	timezone: string | null;
 	week_start: 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+	reminder_enabled: boolean;
+	reminder_service: 'push' | 'ntfy' | null;
+	reminder_time: string | null; // HH:MM format
+	ntfy_url_encrypted: string | null;
+	ntfy_encryption_iv: string | null;
+	push_subscription: Record<string, unknown> | null;
 	created_at: Date;
 }
 

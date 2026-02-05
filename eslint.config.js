@@ -75,6 +75,15 @@ export default [
 	},
 	prettier,
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/', '*.config.ts', '*.config.js', 'migrations/']
+		ignores: [
+			'build/',
+			'.svelte-kit/',
+			'dist/',
+			'*.config.ts',
+			'*.config.js',
+			'migrations/',
+			'scripts/',
+			'src/service-worker.ts'
+		]
 	}
 ];
