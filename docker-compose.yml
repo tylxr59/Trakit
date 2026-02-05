@@ -31,6 +31,10 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-Trakit <noreply@example.com>}
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:3000}
+      NOTIFICATION_ENCRYPTION_KEY: ${NOTIFICATION_ENCRYPTION_KEY:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_EMAIL: ${VAPID_EMAIL:-noreply@yourdomain.com}
       NODE_ENV: production
     depends_on:
       db:
