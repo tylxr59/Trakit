@@ -2,7 +2,7 @@
 
 ## What is Trakit?
 
-A self-hosted habit tracker with GitHub-style calendar visualization. Built with **SvelteKit 2.14 (Svelte 5)**, **TypeScript**, and **SQLite**.
+A self-hosted habit tracker with GitHub-style calendar visualization. Built with **SvelteKit 2.68 (Svelte 5)**, **TypeScript**, and **SQLite**.
 
 ## Tech Stack Essentials
 

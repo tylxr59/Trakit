@@ -5,8 +5,8 @@
 **A free and open-source habit tracker with a beautiful GitHub-style calendar**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
-[![SvelteKit](https://img.shields.io/badge/SvelteKit-2.14-orange)](https://kit.svelte.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue)](https://www.typescriptlang.org/)
+[![SvelteKit](https://img.shields.io/badge/SvelteKit-2.68-orange)](https://kit.svelte.dev/)
 
 [Homepage](https://gettrakit.app) • [Features](#features) • [Quick Start](#quick-start) • [Deployment](#deployment) • [Documentation](#documentation)
 
@@ -30,7 +30,7 @@ Trakit is a self-hosted habit tracking application built with SvelteKit, TypeScr
 
 ## Tech Stack
 
-- **Frontend**: SvelteKit 2.14 (Svelte 5), TypeScript, Tailwind CSS
+- **Frontend**: SvelteKit 2.68 (Svelte 5), TypeScript, Tailwind CSS
 - **Backend**: SvelteKit API routes, custom session-based authentication with CSRF protection
 - **Database**: SQLite with file-based migrations
 - **Icons**: Iconify (Material Symbols)
@@ -206,7 +206,7 @@ Contributions are welcome! To contribute:
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests and linting (`npm run lint && npm test`)
+4. Run checks (`npm run check && npm run lint && npm test`)
 5. Commit your changes (`git commit -m 'Add amazing feature'`)
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
