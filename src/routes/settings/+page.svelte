@@ -18,6 +18,13 @@
 	let testingNotification = $state(false);
 	let notificationMessage = $state<{ type: 'success' | 'error'; text: string } | null>(null);
 
+	function jsonHeaders() {
+		return {
+			'Content-Type': 'application/json',
+			'X-CSRF-Token': ((data as unknown as { csrfToken?: string | null }).csrfToken ?? '')
+		};
+	}
+
 	// Initialize from server data
 	$effect(() => {
 		reminderEnabled = data.reminderEnabled;
@@ -65,7 +72,7 @@
 				// Send subscription to server
 				const response = await fetch('/api/notifications/subscribe', {
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
+					headers: jsonHeaders(),
 					body: JSON.stringify({ subscription: subscription.toJSON() })
 				});
 
@@ -89,7 +96,7 @@
 		try {
 			const response = await fetch('/api/notifications/preferences', {
 				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
+				headers: jsonHeaders(),
 				body: JSON.stringify({
 					reminderEnabled,
 					reminderService,
@@ -152,7 +159,8 @@
 
 		try {
 			const response = await fetch('/api/notifications/test', {
-				method: 'POST'
+				method: 'POST',
+				headers: jsonHeaders()
 			});
 
 			if (!response.ok) {

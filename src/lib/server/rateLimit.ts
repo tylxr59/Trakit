@@ -1,115 +1,102 @@
 /**
- * Rate limiting utility to prevent brute force attacks
- * Tracks attempts by IP address or identifier
+ * SQLite-backed rate limiting for auth-sensitive endpoints.
  */
 
-interface RateLimitEntry {
-	count: number;
-	resetTime: number;
-}
+import { env } from '$env/dynamic/private';
+import { pool } from './db';
 
 class RateLimiter {
-	private attempts: Map<string, RateLimitEntry> = new Map();
-	private maxAttempts: number;
-	private windowMs: number;
+	constructor(
+		private type: string,
+		private maxAttempts: number = 5,
+		private windowMs: number = 15 * 60 * 1000
+	) {}
 
-	constructor(maxAttempts: number = 5, windowMs: number = 15 * 60 * 1000) {
-		this.maxAttempts = maxAttempts;
-		this.windowMs = windowMs;
-
-		// Clean up expired entries every minute
-		setInterval(() => this.cleanup(), 60 * 1000);
-	}
-
-	/**
-	 * Check if the identifier has exceeded the rate limit
-	 */
-	isRateLimited(identifier: string): boolean {
+	async isRateLimited(identifier: string): Promise<boolean> {
 		const now = Date.now();
-		const entry = this.attempts.get(identifier);
+		const result = await pool.query<{ count: number; reset_time: number }>(
+			'SELECT count, reset_time FROM auth_rate_limits WHERE type = $1 AND identifier = $2',
+			[this.type, identifier]
+		);
+		const entry = result.rows[0];
 
 		if (!entry) {
 			return false;
 		}
 
-		if (now > entry.resetTime) {
-			this.attempts.delete(identifier);
+		if (now > entry.reset_time) {
+			await this.reset(identifier);
 			return false;
 		}
 
 		return entry.count >= this.maxAttempts;
 	}
 
-	/**
-	 * Record an attempt for the identifier
-	 */
-	recordAttempt(identifier: string): void {
+	async recordAttempt(identifier: string): Promise<void> {
 		const now = Date.now();
-		const entry = this.attempts.get(identifier);
+		const resetTime = now + this.windowMs;
 
-		if (!entry || now > entry.resetTime) {
-			this.attempts.set(identifier, {
-				count: 1,
-				resetTime: now + this.windowMs
-			});
-		} else {
-			entry.count++;
-		}
+		await pool.query(
+			`INSERT INTO auth_rate_limits (type, identifier, count, reset_time)
+			VALUES ($1, $2, 1, $3)
+			ON CONFLICT (type, identifier)
+			DO UPDATE SET
+				count = CASE
+					WHEN auth_rate_limits.reset_time <= $4 THEN 1
+					ELSE auth_rate_limits.count + 1
+				END,
+				reset_time = CASE
+					WHEN auth_rate_limits.reset_time <= $4 THEN $3
+					ELSE auth_rate_limits.reset_time
+				END`,
+			[this.type, identifier, resetTime, now]
+		);
 	}
 
-	/**
-	 * Reset attempts for an identifier (e.g., after successful login)
-	 */
-	reset(identifier: string): void {
-		this.attempts.delete(identifier);
+	async reset(identifier: string): Promise<void> {
+		await pool.query('DELETE FROM auth_rate_limits WHERE type = $1 AND identifier = $2', [
+			this.type,
+			identifier
+		]);
 	}
 
-	/**
-	 * Get time until rate limit resets (in seconds)
-	 */
-	getResetTime(identifier: string): number {
-		const entry = this.attempts.get(identifier);
+	async getResetTime(identifier: string): Promise<number> {
+		const result = await pool.query<{ reset_time: number }>(
+			'SELECT reset_time FROM auth_rate_limits WHERE type = $1 AND identifier = $2',
+			[this.type, identifier]
+		);
+		const entry = result.rows[0];
 		if (!entry) return 0;
 
 		const now = Date.now();
-		if (now > entry.resetTime) return 0;
+		if (now > entry.reset_time) return 0;
 
-		return Math.ceil((entry.resetTime - now) / 1000);
-	}
-
-	/**
-	 * Clean up expired entries
-	 */
-	private cleanup(): void {
-		const now = Date.now();
-		for (const [key, entry] of this.attempts.entries()) {
-			if (now > entry.resetTime) {
-				this.attempts.delete(key);
-			}
-		}
+		return Math.ceil((entry.reset_time - now) / 1000);
 	}
 }
 
-// Rate limiters for different endpoints
-export const loginRateLimiter = new RateLimiter(5, 15 * 60 * 1000); // 5 attempts per 15 minutes
-export const signupRateLimiter = new RateLimiter(3, 60 * 60 * 1000); // 3 attempts per hour
-export const verificationRateLimiter = new RateLimiter(10, 60 * 60 * 1000); // 10 attempts per hour
+export const loginRateLimiter = new RateLimiter('login', 5, 15 * 60 * 1000);
+export const signupRateLimiter = new RateLimiter('signup', 3, 60 * 60 * 1000);
+export const verificationRateLimiter = new RateLimiter('verification', 10, 60 * 60 * 1000);
 
 /**
- * Get client IP address from request
+ * Get client IP address from request.
+ *
+ * Proxy headers are only trusted when TRUST_PROXY=true. Without that, a client
+ * can spoof X-Forwarded-For and bypass IP-based limits.
  */
 export function getClientIP(request: Request): string {
-	// Check common headers for IP address
-	const forwarded = request.headers.get('x-forwarded-for');
-	if (forwarded) {
-		return forwarded.split(',')[0].trim();
+	if (env.TRUST_PROXY === 'true') {
+		const forwarded = request.headers.get('x-forwarded-for');
+		if (forwarded) {
+			return forwarded.split(',')[0].trim();
+		}
+
+		const realIP = request.headers.get('x-real-ip');
+		if (realIP) {
+			return realIP;
+		}
 	}
 
-	const realIP = request.headers.get('x-real-ip');
-	if (realIP) {
-		return realIP;
-	}
-
-	// Fallback to a generic identifier if IP is not available
-	return 'unknown';
+	return 'local';
 }

@@ -1,11 +1,16 @@
 import { json, error } from '@sveltejs/kit';
 import { pool } from '$lib/server/db';
 import { isValidStampValue, isValidDateString } from '$lib/server/validation';
+import { validateCSRFFromHeaders } from '$lib/server/sessions';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
+	}
+
+	if (!validateCSRFFromHeaders(locals.session?.csrfToken, request)) {
+		throw error(403, 'Invalid CSRF token');
 	}
 
 	const { habitId, date, value } = await request.json();
@@ -37,11 +42,11 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	} else {
 		// Insert or update stamp
 		await pool.query(
-			`INSERT INTO habit_stamps (habit_id, day, value) 
-       VALUES ($1, $2, $3)
+			`INSERT INTO habit_stamps (id, habit_id, day, value) 
+       VALUES ($1, $2, $3, $4)
        ON CONFLICT (habit_id, day) 
-       DO UPDATE SET value = $3`,
-			[habitId, date, value]
+       DO UPDATE SET value = $4`,
+			[crypto.randomUUID(), habitId, date, value]
 		);
 	}
 

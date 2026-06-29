@@ -32,6 +32,13 @@
 	let newHabitColor = $state('#22C55E');
 	let newHabitFrequency = $state('daily');
 
+	function jsonHeaders() {
+		return {
+			'Content-Type': 'application/json',
+			'X-CSRF-Token': ((data as unknown as { csrfToken?: string | null }).csrfToken ?? '')
+		};
+	}
+
 	// Get today's date in the user's timezone
 	const today = $derived(new Date().toLocaleDateString('en-CA', { timeZone: userTimezone }));
 
@@ -109,13 +116,13 @@
 			
 			// Delete all stamps in the period
 			for (const dateToDelete of stampDatesToDelete) {
-				await fetch('/api/stamp', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						habitId,
-						date: dateToDelete,
-						value: 0
+					await fetch('/api/stamp', {
+						method: 'POST',
+						headers: jsonHeaders(),
+						body: JSON.stringify({
+							habitId,
+							date: dateToDelete,
+							value: 0
 					})
 				});
 			}
@@ -135,12 +142,12 @@
 			await invalidateAll();
 		} else {
 			// For daily habits or when checking weekly/monthly habits, use today's date
-			const response = await fetch('/api/stamp', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					habitId,
-					date: today,
+				const response = await fetch('/api/stamp', {
+					method: 'POST',
+					headers: jsonHeaders(),
+					body: JSON.stringify({
+						habitId,
+						date: today,
 					value: isStamped ? 0 : 1
 				})
 			});
@@ -250,11 +257,11 @@
 
 		// Save new order to server
 		const habitIds = habits.map((h) => h.id);
-		await fetch('/api/reorder', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ habitIds })
-		});
+			await fetch('/api/reorder', {
+				method: 'POST',
+				headers: jsonHeaders(),
+				body: JSON.stringify({ habitIds })
+			});
 	}
 
 	// Color map for legend display (matches CalendarGrid internal colors)

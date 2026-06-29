@@ -11,13 +11,7 @@ declare global {
 				displayName: string | null;
 				timezone: string | null;
 				week_start:
-					| 'sunday'
-					| 'monday'
-					| 'tuesday'
-					| 'wednesday'
-					| 'thursday'
-					| 'friday'
-					| 'saturday';
+					'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
 			} | null;
 			session: {
 				id: string;

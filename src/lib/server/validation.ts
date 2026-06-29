@@ -91,9 +91,14 @@ export function isValidDateString(date: string): boolean {
 		return false;
 	}
 
-	// Check if it's a valid date
-	const parsed = new Date(date);
-	return !isNaN(parsed.getTime());
+	const [year, month, day] = date.split('-').map(Number);
+	const parsed = new Date(Date.UTC(year, month - 1, day));
+
+	return (
+		parsed.getUTCFullYear() === year &&
+		parsed.getUTCMonth() === month - 1 &&
+		parsed.getUTCDate() === day
+	);
 }
 
 /**

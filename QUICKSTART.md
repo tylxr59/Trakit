@@ -10,7 +10,7 @@ npm install
 
 # 2. Set up environment
 cp .env.example .env
-# Edit .env with your database URL
+# Optional: edit SQLITE_DB_PATH if you want a custom database file path
 
 # 3. Run migrations
 npm run migrate:up

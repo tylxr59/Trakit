@@ -10,21 +10,6 @@ jobs:
   lint-build-test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: trakit_test
-          POSTGRES_USER: trakit
-          POSTGRES_PASSWORD: trakit
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
     steps:
       - uses: actions/checkout@v4
 
@@ -46,7 +31,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          DATABASE_URL: postgresql://trakit:trakit@localhost:5432/trakit_test
+          SQLITE_DB_PATH: ./data/trakit-test.db
           EMAIL_VERIFICATION_REQUIRED: false
           ALLOW_REGISTRATION: true
           SMTP_HOST: smtp.example.com
@@ -59,4 +44,4 @@ jobs:
       - name: Run tests
         run: npm test
         env:
-          DATABASE_URL: postgresql://trakit:trakit@localhost:5432/trakit_test
+          SQLITE_DB_PATH: ./data/trakit-test.db

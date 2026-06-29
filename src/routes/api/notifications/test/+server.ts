@@ -8,11 +8,16 @@ import type { RequestHandler } from './$types';
 import { pool } from '$lib/server/db';
 import { sendWebPushNotification, sendNtfyNotification } from '$lib/server/notifications';
 import { logger } from '$lib/server/logger';
+import { validateCSRFFromHeaders } from '$lib/server/sessions';
 
-export const POST: RequestHandler = async ({ locals }) => {
+export const POST: RequestHandler = async ({ locals, request }) => {
 	// Auth check
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
+	}
+
+	if (!validateCSRFFromHeaders(locals.session?.csrfToken, request)) {
+		throw error(403, 'Invalid CSRF token');
 	}
 
 	try {

@@ -9,11 +9,16 @@ import { pool } from '$lib/server/db';
 import { isValidTimeFormat, isValidReminderService, validateNtfyUrl } from '$lib/server/validation';
 import { encryptNtfyUrl } from '$lib/server/encryption';
 import { logger } from '$lib/server/logger';
+import { validateCSRFFromHeaders } from '$lib/server/sessions';
 
 export const PATCH: RequestHandler = async ({ locals, request }) => {
 	// Auth check
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
+	}
+
+	if (!validateCSRFFromHeaders(locals.session?.csrfToken, request)) {
+		throw error(403, 'Invalid CSRF token');
 	}
 
 	try {

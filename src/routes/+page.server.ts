@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const oneYearAgo = new Date();
 	oneYearAgo.setDate(oneYearAgo.getDate() - 364);
 	const stampsResult = await pool.query(
-		`SELECT hs.habit_id, hs.day::text as day, hs.value 
+		`SELECT hs.habit_id, hs.day as day, hs.value 
      FROM habit_stamps hs
      JOIN habits h ON h.id = hs.habit_id
      WHERE h.user_id = $1 AND hs.day >= $2
@@ -92,8 +92,8 @@ export const actions: Actions = {
 		}
 
 		await pool.query(
-			'INSERT INTO habits (user_id, name, color, frequency) VALUES ($1, $2, $3, $4)',
-			[locals.user.id, nameValidation.sanitized, color, frequency]
+			'INSERT INTO habits (id, user_id, name, color, frequency) VALUES ($1, $2, $3, $4, $5)',
+			[crypto.randomUUID(), locals.user.id, nameValidation.sanitized, color, frequency]
 		);
 
 		return { success: true };

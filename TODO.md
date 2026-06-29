@@ -8,7 +8,7 @@ This document tracks outstanding tasks, technical debt, and implementation notes
 
 **Implementation Decisions:**
 
-- ✅ Using node-cron for scheduling (single-process, simple MVP approach)
+- ✅ Using node-cron for scheduling with a SQLite delivery ledger to prevent duplicate reminders
 - ✅ Encrypt Ntfy credentials with app secret (crypto module with AES-256-GCM)
 - ✅ Daily reminders at user-specified time in their timezone
 - ✅ Single motivational notification listing all incomplete habits
@@ -36,17 +36,14 @@ This document tracks outstanding tasks, technical debt, and implementation notes
 
 **Known Limitations (MVP):**
 
-- Scheduler uses node-cron (single-process only, doesn't scale horizontally)
 - No retry mechanism for failed notifications
-- No delivery confirmation tracking
-- No rate limiting on subscription endpoints yet
+- Delivery tracking is limited to duplicate prevention, not confirmation
 - Service worker TypeScript not in tsconfig (intentional, handled by Vite PWA)
 
 **Production Improvements Needed:**
 
-- Consider Redis + BullMQ for multi-instance deployments
+- Consider a dedicated job queue if reminder volume grows beyond a single app container
 - Add monitoring for notification delivery rates
-- Implement rate limiting on `/api/notifications/*` endpoints
 - Add automated tests for encryption, scheduler, and notification delivery
 - Add health check endpoint for scheduler status
 
@@ -59,17 +56,10 @@ This document tracks outstanding tasks, technical debt, and implementation notes
 - **TODO:** Implement proper logging service for production (Winston, Pino, or external service like Datadog)
 - **Impact:** Makes debugging production issues difficult
 
-### Rate Limiting
-
-- **Priority:** Medium
-- **Description:** In-memory rate limiting doesn't work across multiple instances
-- **TODO:** Move to Redis-backed rate limiting for horizontal scaling
-- **File:** `src/lib/server/rateLimit.ts`
-
 ### Session Storage
 
 - **Priority:** Low
-- **Description:** Sessions stored in PostgreSQL; could benefit from Redis for performance
+- **Description:** Sessions stored in SQLite; could benefit from Redis for high-concurrency deployments
 - **TODO:** Evaluate Redis session store if performance becomes issue
 - **Impact:** Minimal for current scale
 
@@ -110,7 +100,7 @@ This document tracks outstanding tasks, technical debt, and implementation notes
 - [ ] Health check endpoint for monitoring
 - [ ] Metrics/observability (Prometheus, Grafana)
 - [ ] Database backup automation
-- [ ] Database connection pooling optimization
+- [ ] SQLite backup/restore documentation
 
 ## Notes for Future Agents
 
@@ -124,4 +114,4 @@ When making changes to the codebase:
 
 ---
 
-**Last Updated:** 2026-02-05
+**Last Updated:** 2026-06-29

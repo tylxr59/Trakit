@@ -14,7 +14,6 @@ echo ""
 
 # Prompt for configuration
 read -p "Enter your domain (e.g., trakit.example.com): " DOMAIN
-DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
 read -p "Require email verification? (y/n, default: y): " EMAIL_VERIFY
 EMAIL_VERIFY=${EMAIL_VERIFY:-y}
 if [[ $EMAIL_VERIFY =~ ^[Yy]$ ]]; then
@@ -84,11 +83,12 @@ fi
 
 # Create .env file
 cat > .env << EOF
-DB_PASSWORD=$DB_PASSWORD
 DOMAIN=$DOMAIN
+SQLITE_DB_PATH=/app/data/trakit.db
 EMAIL_VERIFICATION_REQUIRED=$EMAIL_VERIFICATION_REQUIRED
 ALLOW_REGISTRATION=true
 PUBLIC_APP_URL=https://$DOMAIN
+TRUST_PROXY=true
 EOF
 
 # Add SMTP settings if email verification is enabled

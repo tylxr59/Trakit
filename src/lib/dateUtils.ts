@@ -15,13 +15,7 @@ export function getWeekKey(
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	_timezone: string = 'UTC',
 	weekStart:
-		| 'sunday'
-		| 'monday'
-		| 'tuesday'
-		| 'wednesday'
-		| 'thursday'
-		| 'friday'
-		| 'saturday' = 'sunday'
+		'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' = 'sunday'
 ): string {
 	// Create date in user's timezone
 	const date = new Date(dateStr + 'T12:00:00'); // Use noon to avoid DST issues

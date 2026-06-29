@@ -12,9 +12,21 @@ import { logger } from './logger';
 import { decryptNtfyUrl } from './encryption';
 
 // Initialize VAPID keys for web push
-// Note: VAPID_PUBLIC_KEY is also exposed as PUBLIC_VAPID_KEY for client use
+let webPushConfigured = false;
+
 if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY && env.VAPID_EMAIL) {
-	webPush.setVapidDetails(`mailto:${env.VAPID_EMAIL}`, env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
+	try {
+		webPush.setVapidDetails(
+			`mailto:${env.VAPID_EMAIL}`,
+			env.VAPID_PUBLIC_KEY,
+			env.VAPID_PRIVATE_KEY
+		);
+		webPushConfigured = true;
+	} catch (error) {
+		logger.warn('Invalid VAPID keys - push notifications will not work', {
+			error: error instanceof Error ? error.message : String(error)
+		});
+	}
 } else {
 	logger.warn('VAPID keys not configured - push notifications will not work');
 }
@@ -36,7 +48,7 @@ export async function sendWebPushNotification(
 	payload: NotificationPayload
 ): Promise<{ success: boolean; error?: string }> {
 	try {
-		if (!env.PUBLIC_VAPID_KEY || !env.VAPID_PRIVATE_KEY) {
+		if (!webPushConfigured) {
 			return { success: false, error: 'Web push not configured' };
 		}
 

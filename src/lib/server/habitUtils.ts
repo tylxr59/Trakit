@@ -20,13 +20,7 @@ export function calculateStreak(
 	frequency: string = 'daily',
 	timezone: string = 'UTC',
 	weekStart:
-		| 'sunday'
-		| 'monday'
-		| 'tuesday'
-		| 'wednesday'
-		| 'thursday'
-		| 'friday'
-		| 'saturday' = 'sunday'
+		'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' = 'sunday'
 ): number {
 	if (stamps.length === 0) return 0;
 

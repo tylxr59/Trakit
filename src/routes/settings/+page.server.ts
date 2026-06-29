@@ -197,9 +197,9 @@ export const actions: Actions = {
 				locals.user.id
 			]);
 
-			// Invalidate all other sessions (keep current one)
-			// This forces re-login on other devices
-			await invalidateUserSessions(locals.user.id);
+			// Invalidate all other sessions. Keep the current session so the successful
+			// response does not leave the browser holding a deleted session cookie.
+			await invalidateUserSessions(locals.user.id, locals.session?.id);
 
 			return { success: true, message: 'Password updated successfully' };
 		} catch (error) {

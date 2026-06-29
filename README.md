@@ -16,7 +16,7 @@
 
 ## Overview
 
-Trakit is a self-hosted habit tracking application built with SvelteKit, TypeScript, and PostgreSQL. Track your daily habits with visual calendar grids, secure authentication, and a beautiful Material 3 design—all while keeping your data private on your own server.
+Trakit is a self-hosted habit tracking application built with SvelteKit, TypeScript, and SQLite. Track your daily habits with visual calendar grids, secure authentication, and a beautiful Material 3 design—all while keeping your data private on your own server.
 
 ## Features
 
@@ -32,7 +32,7 @@ Trakit is a self-hosted habit tracking application built with SvelteKit, TypeScr
 
 - **Frontend**: SvelteKit 2.14 (Svelte 5), TypeScript, Tailwind CSS
 - **Backend**: SvelteKit API routes, custom session-based authentication with CSRF protection
-- **Database**: PostgreSQL 16 with migrations
+- **Database**: SQLite with file-based migrations
 - **Icons**: Iconify (Material Symbols)
 - **Email**: Nodemailer (SMTP)
 - **Deployment**: Docker, Docker Compose, Caddy (auto-HTTPS)
@@ -42,7 +42,7 @@ Trakit is a self-hosted habit tracking application built with SvelteKit, TypeScr
 ### Prerequisites
 
 - Node.js 20+
-- PostgreSQL 16+ (or use Docker)
+- npm
 - SMTP server (optional, for email verification)
 
 ### Local Development
@@ -64,9 +64,10 @@ cp .env.example .env
 Edit `.env` with your settings:
 
 ```env
-DATABASE_URL=postgresql://trakit:trakit@localhost:5432/trakit
+SQLITE_DB_PATH=./data/trakit.db
 EMAIL_VERIFICATION_REQUIRED=false
 ALLOW_REGISTRATION=true
+TRUST_PROXY=false
 PUBLIC_APP_URL=http://localhost:5173
 ```
 
@@ -134,17 +135,18 @@ cd /opt/trakit && sudo ./admin.sh
 
 ### Environment Variables
 
-| Variable                      | Required      | Default                 | Description                  |
-| ----------------------------- | ------------- | ----------------------- | ---------------------------- |
-| `DATABASE_URL`                | Yes           | -                       | PostgreSQL connection string |
-| `EMAIL_VERIFICATION_REQUIRED` | No            | `false`                 | Enable email verification    |
-| `ALLOW_REGISTRATION`          | No            | `true`                  | Allow new user registration  |
-| `SMTP_HOST`                   | Conditional\* | -                       | SMTP server hostname         |
-| `SMTP_PORT`                   | Conditional\* | `587`                   | SMTP server port             |
-| `SMTP_USER`                   | Conditional\* | -                       | SMTP username                |
-| `SMTP_PASSWORD`               | Conditional\* | -                       | SMTP password                |
-| `SMTP_FROM`                   | Conditional\* | -                       | Email sender address         |
-| `PUBLIC_APP_URL`              | No            | `http://localhost:5173` | Public URL of the app        |
+| Variable                      | Required      | Default                 | Description                 |
+| ----------------------------- | ------------- | ----------------------- | --------------------------- |
+| `SQLITE_DB_PATH`              | No            | `./data/trakit.db`      | SQLite database file path   |
+| `EMAIL_VERIFICATION_REQUIRED` | No            | `false`                 | Enable email verification   |
+| `ALLOW_REGISTRATION`          | No            | `true`                  | Allow new user registration |
+| `SMTP_HOST`                   | Conditional\* | -                       | SMTP server hostname        |
+| `SMTP_PORT`                   | Conditional\* | `587`                   | SMTP server port            |
+| `SMTP_USER`                   | Conditional\* | -                       | SMTP username               |
+| `SMTP_PASSWORD`               | Conditional\* | -                       | SMTP password               |
+| `SMTP_FROM`                   | Conditional\* | -                       | Email sender address        |
+| `PUBLIC_APP_URL`              | No            | `http://localhost:5173` | Public URL of the app       |
+| `TRUST_PROXY`                 | No            | `false`                 | Trust proxy IP headers      |
 
 \* Required only if `EMAIL_VERIFICATION_REQUIRED=true`
 
@@ -152,12 +154,12 @@ cd /opt/trakit && sudo ./admin.sh
 
 ```bash
 # Create migration
-npm run migrate:create migration-name
+npm run migrate:create -- migration-name
 
 # Run migrations
 npm run migrate:up
 
-# Rollback
+# Rollback is intentionally not implemented for SQLite migrations yet
 npm run migrate:down
 ```
 
@@ -224,7 +226,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Built with amazing open-source tools:
 
 - [SvelteKit](https://kit.svelte.dev/) - Web framework
-- [PostgreSQL](https://www.postgresql.org/) - Database
+- [SQLite](https://www.sqlite.org/) - Database
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Iconify](https://iconify.design/) - Icons
 - [@oslojs](https://oslojs.dev/) - Cryptographic utilities

@@ -1,11 +1,16 @@
 import { json, error } from '@sveltejs/kit';
 import { pool } from '$lib/server/db';
 import { validateHabitName, isValidColor, isValidFrequency } from '$lib/server/validation';
+import { validateCSRFFromHeaders } from '$lib/server/sessions';
 import type { RequestHandler } from './$types';
 
 export const PATCH: RequestHandler = async ({ locals, request }) => {
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
+	}
+
+	if (!validateCSRFFromHeaders(locals.session?.csrfToken, request)) {
+		throw error(403, 'Invalid CSRF token');
 	}
 
 	const { habitId, name, color, frequency } = await request.json();

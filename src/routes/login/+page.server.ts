@@ -22,8 +22,8 @@ export const actions: Actions = {
 		const clientIP = getClientIP(request);
 
 		// Check rate limit
-		if (loginRateLimiter.isRateLimited(clientIP)) {
-			const resetTime = loginRateLimiter.getResetTime(clientIP);
+		if (await loginRateLimiter.isRateLimited(clientIP)) {
+			const resetTime = await loginRateLimiter.getResetTime(clientIP);
 			logSecurityEvent(
 				createSecurityEvent('login_rate_limited', clientIP, {
 					message: `Rate limit exceeded, resets in ${resetTime}s`
@@ -40,7 +40,7 @@ export const actions: Actions = {
 		const verificationCode = formData.get('verificationCode') as string;
 
 		if (!email || !password) {
-			loginRateLimiter.recordAttempt(clientIP);
+			await loginRateLimiter.recordAttempt(clientIP);
 			return fail(400, { message: 'Email and password are required' });
 		}
 
@@ -53,7 +53,7 @@ export const actions: Actions = {
 		const invalidCredentialsMessage = 'Invalid email or password';
 
 		if (userResult.rows.length === 0) {
-			loginRateLimiter.recordAttempt(clientIP);
+			await loginRateLimiter.recordAttempt(clientIP);
 			logSecurityEvent(
 				createSecurityEvent('login_failed', clientIP, {
 					email,
@@ -73,7 +73,7 @@ export const actions: Actions = {
 		});
 
 		if (!validPassword) {
-			loginRateLimiter.recordAttempt(clientIP);
+			await loginRateLimiter.recordAttempt(clientIP);
 			logSecurityEvent(
 				createSecurityEvent('login_failed', clientIP, {
 					email,
@@ -94,8 +94,8 @@ export const actions: Actions = {
 			}
 
 			// Check verification rate limit
-			if (verificationRateLimiter.isRateLimited(clientIP + ':' + user.id)) {
-				const resetTime = verificationRateLimiter.getResetTime(clientIP + ':' + user.id);
+			if (await verificationRateLimiter.isRateLimited(clientIP + ':' + user.id)) {
+				const resetTime = await verificationRateLimiter.getResetTime(clientIP + ':' + user.id);
 				logSecurityEvent(
 					createSecurityEvent('verification_rate_limited', clientIP, {
 						email,
@@ -115,20 +115,20 @@ export const actions: Actions = {
 			);
 
 			if (codeResult.rows.length === 0) {
-				verificationRateLimiter.recordAttempt(clientIP + ':' + user.id);
+				await verificationRateLimiter.recordAttempt(clientIP + ':' + user.id);
 				return fail(400, { message: 'No verification code found. Please sign up again.' });
 			}
 
 			const codeData = codeResult.rows[0];
 
 			if (new Date() > new Date(codeData.expires_at)) {
-				verificationRateLimiter.recordAttempt(clientIP + ':' + user.id);
+				await verificationRateLimiter.recordAttempt(clientIP + ':' + user.id);
 				return fail(400, { message: 'Verification code expired. Please sign up again.' });
 			}
 
 			// Use constant-time comparison to prevent timing attacks
 			if (!constantTimeCompare(codeData.code, verificationCode)) {
-				verificationRateLimiter.recordAttempt(clientIP + ':' + user.id);
+				await verificationRateLimiter.recordAttempt(clientIP + ':' + user.id);
 				logSecurityEvent(
 					createSecurityEvent('verification_failed', clientIP, {
 						email,
@@ -142,7 +142,7 @@ export const actions: Actions = {
 			// Mark email as verified
 			await pool.query('UPDATE users SET email_verified = true WHERE id = $1', [user.id]);
 			await pool.query('DELETE FROM email_verification_codes WHERE user_id = $1', [user.id]);
-			verificationRateLimiter.reset(clientIP + ':' + user.id);
+			await verificationRateLimiter.reset(clientIP + ':' + user.id);
 		}
 
 		const { token, session } = await createSession(user.id);
@@ -150,7 +150,7 @@ export const actions: Actions = {
 		setCSRFCookie(cookies, session.csrfToken, session.expiresAt);
 
 		// Reset rate limit on successful login
-		loginRateLimiter.reset(clientIP);
+		await loginRateLimiter.reset(clientIP);
 
 		logSecurityEvent(
 			createSecurityEvent('login_success', clientIP, {

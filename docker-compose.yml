@@ -1,28 +1,11 @@
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: trakit-db
-    environment:
-      POSTGRES_DB: trakit
-      POSTGRES_USER: trakit
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-trakit}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - trakit-network
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U trakit']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: trakit-app
     environment:
-      DATABASE_URL: postgresql://trakit:${DB_PASSWORD:-trakit}@db:5432/trakit
+      SQLITE_DB_PATH: /app/data/trakit.db
       EMAIL_VERIFICATION_REQUIRED: ${EMAIL_VERIFICATION_REQUIRED:-false}
       ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
       SMTP_HOST: ${SMTP_HOST:-smtp.example.com}
@@ -35,10 +18,10 @@ services:
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_EMAIL: ${VAPID_EMAIL:-noreply@yourdomain.com}
+      TRUST_PROXY: ${TRUST_PROXY:-true}
       NODE_ENV: production
-    depends_on:
-      db:
-        condition: service_healthy
+    volumes:
+      - trakit_data:/app/data
     networks:
       - trakit-network
     restart: unless-stopped
@@ -63,7 +46,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  trakit_data:
   caddy_data:
   caddy_config:
 

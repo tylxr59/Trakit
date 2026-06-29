@@ -2,13 +2,13 @@
 
 ## What is Trakit?
 
-A self-hosted habit tracker with GitHub-style calendar visualization. Built with **SvelteKit 2.14 (Svelte 5)**, **TypeScript**, and **PostgreSQL**.
+A self-hosted habit tracker with GitHub-style calendar visualization. Built with **SvelteKit 2.14 (Svelte 5)**, **TypeScript**, and **SQLite**.
 
 ## Tech Stack Essentials
 
 - **Frontend**: SvelteKit + Svelte 5 (uses runes: `$state`, `$derived`, `$props`)
 - **Backend**: SvelteKit API routes + custom session auth (CSRF protected)
-- **Database**: PostgreSQL 16+ with `node-pg-migrate`
+- **Database**: SQLite with `better-sqlite3` and local SQL migrations
 - **Styling**: Tailwind CSS 4.1 with Material 3 design tokens
 - **Auth**: Custom session management (replaced Lucia v3) using `@oslojs/crypto`
 
@@ -81,7 +81,7 @@ migrations/                # Database schema migrations
 
 ### Adding a New Habit Property
 
-1. Create migration: `npm run migrate:create add-property-name`
+1. Create migration: `npm run migrate:create -- add-property-name`
 2. Update `Habit` interface in `src/lib/server/db.ts`
 3. Add validation in `src/lib/server/validation.ts`
 4. Update API handler in `src/routes/api/habit/+server.ts`
@@ -101,7 +101,7 @@ Edit `src/app.css` - Material 3 tokens are CSS custom properties
 
 ```bash
 npm run dev              # Start dev server, don't run one, assume it's already running
-npm run migrate:up       # Apply migrations
+npm run migrate:up       # Apply SQLite migrations
 npm run check            # TypeScript + Svelte check
 npm run lint             # ESLint + Prettier
 npm run format           # Formats files to pass lint checks

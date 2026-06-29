@@ -23,12 +23,16 @@ echo "==========================="
 
 # Function to run SQL query
 run_query() {
-    docker compose exec -T db psql -U trakit -t -A -c "$1"
+    docker compose exec -T app node scripts/query-sqlite.mjs --value "$1"
 }
 
 # Function to run SQL query with nice formatting
 run_query_formatted() {
-    docker compose exec -T db psql -U trakit -c "$1"
+    docker compose exec -T app node scripts/query-sqlite.mjs --table "$1"
+}
+
+sql_escape() {
+    printf "%s" "$1" | sed "s/'/''/g"
 }
 
 while true; do
@@ -121,7 +125,7 @@ while true; do
             echo "Total Stamps: $TOTAL_STAMPS"
             
             if [ "$TOTAL_USERS" -gt 0 ]; then
-                AVG_HABITS=$(run_query "SELECT ROUND(AVG(habit_count)::numeric, 2) FROM (SELECT COUNT(*) as habit_count FROM habits GROUP BY user_id) as counts;")
+                AVG_HABITS=$(run_query "SELECT ROUND(AVG(habit_count), 2) FROM (SELECT COUNT(*) as habit_count FROM habits GROUP BY user_id) as counts;")
                 echo "Average Habits per User: ${AVG_HABITS:-0}"
             fi
             ;;
@@ -134,7 +138,7 @@ while true; do
             run_query_formatted "SELECT 
                 email, 
                 email_verified as verified,
-                to_char(created_at, 'YYYY-MM-DD HH24:MI') as joined
+                strftime('%Y-%m-%d %H:%M', created_at) as joined
             FROM users 
             ORDER BY created_at DESC;"
             ;;
@@ -174,7 +178,8 @@ while true; do
                 continue
             fi
             
-            USER_ID=$(run_query "SELECT id FROM users WHERE email = '$user_email';")
+            escaped_email=$(sql_escape "$user_email")
+            USER_ID=$(run_query "SELECT id FROM users WHERE email = '$escaped_email';")
             
             if [ -z "$USER_ID" ]; then
                 echo "Error: User not found"
@@ -193,12 +198,8 @@ while true; do
             echo ""
             echo "Deleting user data..."
             
-            # Delete in order: stamps -> habits -> sessions -> user
-            run_query "DELETE FROM habit_stamps WHERE habit_id IN (SELECT id FROM habits WHERE user_id = '$USER_ID');"
-            run_query "DELETE FROM habits WHERE user_id = '$USER_ID';"
-            run_query "DELETE FROM user_sessions WHERE user_id = '$USER_ID';"
-            run_query "DELETE FROM email_verification_codes WHERE user_id = '$USER_ID';"
-            run_query "DELETE FROM users WHERE id = '$USER_ID';"
+            escaped_user_id=$(sql_escape "$USER_ID")
+            run_query "DELETE FROM users WHERE id = '$escaped_user_id';"
             
             echo "✅ User deleted successfully"
             ;;
@@ -221,7 +222,7 @@ while true; do
             echo ""
             
             # Get current restart policy for app container
-            CURRENT_POLICY=$(docker inspect trakit-app-1 --format='{{.HostConfig.RestartPolicy.Name}}' 2>/dev/null || echo "unknown")
+            CURRENT_POLICY=$(docker inspect trakit-app --format='{{.HostConfig.RestartPolicy.Name}}' 2>/dev/null || echo "unknown")
             
             if [ "$CURRENT_POLICY" = "unknown" ]; then
                 echo "⚠️  Warning: Containers may not be running. Start services first (option 1)."

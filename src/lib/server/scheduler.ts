@@ -15,6 +15,8 @@ import {
 	createReminderMessage
 } from './notifications';
 
+let schedulerStarted = false;
+
 /**
  * Check if current time matches user's reminder time in their timezone
  */
@@ -48,18 +50,25 @@ async function getIncompleteHabitsForUser(
 		const today = DateTime.now().setZone(userTimezone).toISODate();
 
 		// Get all active habits for user
-		const habitsResult = await pool.query(
+		const habitsResult = await pool.query<{ id: string; name: string; frequency: string }>(
 			'SELECT id, name, frequency FROM habits WHERE user_id = $1 ORDER BY sort_order ASC',
 			[userId]
 		);
+		const habitIds = habitsResult.rows.map((h) => h.id);
+		if (habitIds.length === 0) {
+			return [];
+		}
 
 		// Get today's completions
-		const stampsResult = await pool.query(
-			'SELECT habit_id FROM habit_stamps WHERE habit_id = ANY($1::uuid[]) AND day = $2 AND value = 1',
-			[habitsResult.rows.map((h) => h.id), today]
+		const placeholders = habitIds.map((_, index) => `$${index + 1}`).join(', ');
+		const stampsResult = await pool.query<{ habit_id: string }>(
+			`SELECT habit_id FROM habit_stamps WHERE habit_id IN (${placeholders}) AND day = $${
+				habitIds.length + 1
+			} AND value = 1`,
+			[...habitIds, today]
 		);
 
-		const completedHabitIds = new Set(stampsResult.rows.map((s) => s.habit_id));
+		const completedHabitIds = new Set<string>(stampsResult.rows.map((s) => s.habit_id));
 
 		// Filter to incomplete habits
 		const incompleteHabits = habitsResult.rows.filter((habit) => {
@@ -153,7 +162,15 @@ async function sendReminderToUser(user: {
 async function checkAndSendReminders(): Promise<void> {
 	try {
 		// Get all users with reminders enabled
-		const result = await pool.query(
+		const result = await pool.query<{
+			id: string;
+			reminder_service: 'push' | 'ntfy';
+			reminder_time: string;
+			timezone: string | null;
+			push_subscription: unknown;
+			ntfy_url_encrypted: string | null;
+			ntfy_encryption_iv: string | null;
+		}>(
 			`SELECT 
 				id, 
 				reminder_service, 
@@ -178,8 +195,24 @@ async function checkAndSendReminders(): Promise<void> {
 		// Check each user and send reminders if it's their time
 		for (const user of result.rows) {
 			const userTimezone = user.timezone || 'UTC';
+			const userNow = DateTime.now().setZone(userTimezone);
 
 			if (isTimeForReminder(userTimezone, user.reminder_time)) {
+				const deliveryResult = await pool.query(
+					`INSERT OR IGNORE INTO reminder_deliveries (user_id, reminder_date, reminder_time)
+					VALUES ($1, $2, $3)`,
+					[user.id, userNow.toISODate(), user.reminder_time]
+				);
+
+				if (deliveryResult.rowCount === 0) {
+					logger.debug('Reminder already sent for this user/time', {
+						userId: user.id,
+						timezone: userTimezone,
+						reminderTime: user.reminder_time
+					});
+					continue;
+				}
+
 				logger.info('Sending reminder to user', {
 					userId: user.id,
 					timezone: userTimezone,
@@ -195,6 +228,10 @@ async function checkAndSendReminders(): Promise<void> {
 				});
 			}
 		}
+
+		await pool.query(
+			"DELETE FROM reminder_deliveries WHERE created_at < datetime('now', '-60 days')"
+		);
 	} catch (error) {
 		logger.error('Failed to check and send reminders', {
 			error: error instanceof Error ? error.message : String(error)
@@ -207,6 +244,12 @@ async function checkAndSendReminders(): Promise<void> {
  * Runs every minute to check for pending reminders
  */
 export function startReminderScheduler(): void {
+	if (schedulerStarted) {
+		return;
+	}
+
+	schedulerStarted = true;
+
 	// Run every minute
 	cron.schedule('* * * * *', () => {
 		checkAndSendReminders().catch((error) => {

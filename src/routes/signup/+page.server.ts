@@ -24,8 +24,8 @@ export const actions: Actions = {
 		const clientIP = getClientIP(request);
 
 		// Check rate limit
-		if (signupRateLimiter.isRateLimited(clientIP)) {
-			const resetTime = signupRateLimiter.getResetTime(clientIP);
+		if (await signupRateLimiter.isRateLimited(clientIP)) {
+			const resetTime = await signupRateLimiter.getResetTime(clientIP);
 			logSecurityEvent(
 				createSecurityEvent('signup_rate_limited', clientIP, {
 					message: `Rate limit exceeded, resets in ${resetTime}s`
@@ -47,28 +47,28 @@ export const actions: Actions = {
 		const timezone = formData.get('timezone') as string;
 
 		if (!email || !password) {
-			signupRateLimiter.recordAttempt(clientIP);
+			await signupRateLimiter.recordAttempt(clientIP);
 			return fail(400, { message: 'Email and password are required' });
 		}
 
 		if (!displayName || displayName.trim().length === 0) {
-			signupRateLimiter.recordAttempt(clientIP);
+			await signupRateLimiter.recordAttempt(clientIP);
 			return fail(400, { message: 'Display name is required' });
 		}
 
 		if (displayName.length > 100) {
-			signupRateLimiter.recordAttempt(clientIP);
+			await signupRateLimiter.recordAttempt(clientIP);
 			return fail(400, { message: 'Display name is too long (max 100 characters)' });
 		}
 
 		if (!timezone) {
-			signupRateLimiter.recordAttempt(clientIP);
+			await signupRateLimiter.recordAttempt(clientIP);
 			return fail(400, { message: 'Timezone is required' });
 		}
 
 		// Validate email format
 		if (!isValidEmail(email)) {
-			signupRateLimiter.recordAttempt(clientIP);
+			await signupRateLimiter.recordAttempt(clientIP);
 			logSecurityEvent(
 				createSecurityEvent('signup_failed', clientIP, {
 					email,
@@ -79,19 +79,19 @@ export const actions: Actions = {
 		}
 
 		if (password.length < 8) {
-			signupRateLimiter.recordAttempt(clientIP);
+			await signupRateLimiter.recordAttempt(clientIP);
 			return fail(400, { message: 'Password must be at least 8 characters' });
 		}
 
 		if (password.length > 128) {
-			signupRateLimiter.recordAttempt(clientIP);
+			await signupRateLimiter.recordAttempt(clientIP);
 			return fail(400, { message: 'Password is too long' });
 		}
 
 		// Check if user exists
 		const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
 		if (existingUser.rows.length > 0) {
-			signupRateLimiter.recordAttempt(clientIP);
+			await signupRateLimiter.recordAttempt(clientIP);
 			logSecurityEvent(
 				createSecurityEvent('signup_failed', clientIP, {
 					email,
@@ -110,23 +110,24 @@ export const actions: Actions = {
 
 		const emailVerified = env.EMAIL_VERIFICATION_REQUIRED !== 'true';
 
-		// Insert user and get the generated UUID
+		// Insert user with an app-generated UUID.
+		const userId = crypto.randomUUID();
 		const userResult = await pool.query(
-			'INSERT INTO users (email, password_hash, email_verified, display_name, timezone) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-			[email, passwordHash, emailVerified, displayName.trim(), timezone]
+			'INSERT INTO users (id, email, password_hash, email_verified, display_name, timezone) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+			[userId, email, passwordHash, emailVerified, displayName.trim(), timezone]
 		);
 
-		const userId = userResult.rows[0].id;
+		const createdUserId = userResult.rows[0].id;
 
 		logSecurityEvent(
 			createSecurityEvent('signup_success', clientIP, {
 				email,
-				userId
+				userId: createdUserId
 			})
 		);
 
 		// Reset rate limit on successful signup
-		signupRateLimiter.reset(clientIP);
+		await signupRateLimiter.reset(clientIP);
 
 		if (env.EMAIL_VERIFICATION_REQUIRED === 'true') {
 			// Generate 6-digit code
@@ -135,8 +136,8 @@ export const actions: Actions = {
 			expiresAt.setMinutes(expiresAt.getMinutes() + 15);
 
 			await pool.query(
-				'INSERT INTO email_verification_codes (user_id, code, expires_at) VALUES ($1, $2, $3)',
-				[userId, code, expiresAt]
+				'INSERT INTO email_verification_codes (id, user_id, code, expires_at) VALUES ($1, $2, $3, $4)',
+				[crypto.randomUUID(), createdUserId, code, expiresAt]
 			);
 
 			await sendVerificationEmail(email, code);
@@ -144,12 +145,12 @@ export const actions: Actions = {
 			return {
 				success: true,
 				requiresVerification: true,
-				userId
+				userId: createdUserId
 			};
 		}
 
 		// Auto-login if verification not required
-		const { token, session } = await createSession(userId);
+		const { token, session } = await createSession(createdUserId);
 		setSessionCookie(cookies, token, session.expiresAt);
 		setCSRFCookie(cookies, session.csrfToken, session.expiresAt);
 

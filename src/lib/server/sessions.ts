@@ -157,7 +157,18 @@ export async function invalidateSession(sessionId: string): Promise<void> {
 /**
  * Invalidate all sessions for a user
  */
-export async function invalidateUserSessions(userId: string): Promise<void> {
+export async function invalidateUserSessions(
+	userId: string,
+	exceptSessionId?: string
+): Promise<void> {
+	if (exceptSessionId) {
+		await pool.query('DELETE FROM sessions WHERE user_id = $1 AND id != $2', [
+			userId,
+			exceptSessionId
+		]);
+		return;
+	}
+
 	await pool.query('DELETE FROM sessions WHERE user_id = $1', [userId]);
 }
 
@@ -225,6 +236,20 @@ export function validateCSRFToken(
 	}
 	// Use constant-time comparison to prevent timing attacks
 	return timingSafeEqual(sessionCSRFToken, requestCSRFToken);
+}
+
+/**
+ * Validate a CSRF token sent by JSON/fetch clients.
+ */
+export function validateCSRFFromHeaders(
+	sessionCSRFToken: string | undefined,
+	request: Request
+): boolean {
+	if (!sessionCSRFToken) {
+		return false;
+	}
+
+	return validateCSRFToken(sessionCSRFToken, request.headers.get('x-csrf-token'));
 }
 
 /**

@@ -20,7 +20,7 @@
 	let showColorPicker = $state(false);
 	let editName = $state('');
 	let editColor = $state('');
-	let editFrequency = $state('daily');
+	let editFrequency = $state<'daily' | 'weekly' | 'monthly'>('daily');
 	let habitName = $derived(data.habit.name);
 	let habitColor = $derived(data.habit.color);
 	let habitFrequency = $derived(data.habit.frequency || 'daily');
@@ -41,6 +41,13 @@
 		editFrequency = data.habit.frequency || 'daily';
 	});
 	let shareableSection: HTMLElement;
+
+	function jsonHeaders() {
+		return {
+			'Content-Type': 'application/json',
+			'X-CSRF-Token': ((data as unknown as { csrfToken?: string | null }).csrfToken ?? '')
+		};
+	}
 
 	// Derived values for period-aware labels
 	const streakLabel = $derived(
@@ -142,7 +149,7 @@
 	async function saveEdit() {
 		const response = await fetch('/api/habit', {
 			method: 'PATCH',
-			headers: { 'Content-Type': 'application/json' },
+			headers: jsonHeaders(),
 			body: JSON.stringify({
 				habitId: data.habit.id,
 				name: editName,

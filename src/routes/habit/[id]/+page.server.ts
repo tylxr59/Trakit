@@ -11,10 +11,16 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const habitId = params.id;
 
 	// Load habit details
-	const habitResult = await pool.query(
-		'SELECT id, name, color, frequency, created_at FROM habits WHERE id = $1 AND user_id = $2',
-		[habitId, locals.user.id]
-	);
+	const habitResult = await pool.query<{
+		id: string;
+		name: string;
+		color: string;
+		frequency: 'daily' | 'weekly' | 'monthly';
+		created_at: string;
+	}>('SELECT id, name, color, frequency, created_at FROM habits WHERE id = $1 AND user_id = $2', [
+		habitId,
+		locals.user.id
+	]);
 
 	if (habitResult.rows.length === 0) {
 		throw error(404, 'Habit not found');
@@ -23,13 +29,13 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const habit = habitResult.rows[0];
 
 	// Load all stamps for this habit
-	const stampsResult = await pool.query(
+	const stampsResult = await pool.query<{ day: string; value: number }>(
 		'SELECT day, value FROM habit_stamps WHERE habit_id = $1 ORDER BY day DESC',
 		[habitId]
 	);
 
 	const stamps = stampsResult.rows.map((s) => ({
-		date: s.day instanceof Date ? s.day.toISOString().split('T')[0] : s.day,
+		date: s.day,
 		value: s.value
 	}));
 
